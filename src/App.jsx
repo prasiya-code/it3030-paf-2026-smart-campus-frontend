@@ -1,10 +1,20 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ResourceListPage from './pages/resources/ResourceListPage';
+import ResourceCreatePage from './pages/resources/ResourceCreatePage';
+import ResourceEditPage from './pages/resources/ResourceEditPage';
+
 function App() {
   return (
-    <div className="bg-black text-white min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold text-green-400">
-        Smart Campus Frontend 🚀
-      </h1>
-    </div>
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        <Routes>
+          <Route path="/resources" element={<ResourceListPage />} />
+          <Route path="/resources/create" element={<ResourceCreatePage />} />
+          <Route path="/resources/edit/:id" element={<ResourceEditPage />} />
+          <Route path="/" element={<ResourceListPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
