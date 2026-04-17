@@ -13,9 +13,10 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
+    <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+          {/* Brand - Left side */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">O</span>
@@ -26,7 +27,8 @@ const Navbar = () => {
             </div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          {/* Centered Navigation Links */}
+          <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
@@ -38,11 +40,20 @@ const Navbar = () => {
             ))}
           </div>
 
+          {/* Right side buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost">Sign In</Button>
-            <Button>Get Started</Button>
+            <Link
+              to="/login"
+              className="text-slate-600 hover:text-primary-600 font-medium transition-colors px-3 py-2"
+            >
+              Sign In
+            </Link>
+            <Link to="/signup">
+              <Button>Get Started</Button>
+            </Link>
           </div>
 
+          {/* Mobile menu button */}
           <button
             className="md:hidden p-2 text-slate-600 hover:text-slate-900"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -57,6 +68,7 @@ const Navbar = () => {
           </button>
         </div>
 
+        {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-slate-200">
             <div className="flex flex-col gap-4">
@@ -71,8 +83,16 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-slate-200">
-                <Button variant="ghost" className="justify-start">Sign In</Button>
-                <Button className="justify-center">Get Started</Button>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="text-slate-600 hover:text-primary-600 font-medium transition-colors px-3 py-2"
+                >
+                  Sign In
+                </Link>
+                <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                  <Button className="justify-center">Get Started</Button>
+                </Link>
               </div>
             </div>
           </div>
