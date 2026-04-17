@@ -6,6 +6,7 @@ import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import NotificationsPage from "../pages/notifications/NotificationsPage";
 import Layout from "../components/layout/Layout";
 import UserLayout from "../layouts/UserLayout";
+import AdminLayout from "../layouts/AdminLayout";
 import Home from "../pages/public/Home";
 import About from "../pages/public/About";
 import Contact from "../pages/public/Contact";
@@ -14,6 +15,7 @@ import Dashboard from "../pages/user/Dashboard";
 import Tickets from "../pages/user/Tickets";
 import ProfilePage from "../pages/user/ProfilePage";
 import ResourceListPage from "../pages/resources/ResourceListPage";
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 
 function AppRoutes() {
   return (
@@ -41,6 +43,16 @@ function AppRoutes() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/resources" element={<ResourceListPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
