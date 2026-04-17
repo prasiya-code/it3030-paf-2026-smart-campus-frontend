@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 
@@ -82,7 +83,9 @@ const Features = () => {
           <h2 className="text-2xl font-bold text-slate-900 mb-4">
             Ready to experience Opsora?
           </h2>
-          <Button size="lg">Get Started Now</Button>
+          <Link to="/signup">
+            <Button size="lg">Get Started Now</Button>
+          </Link>
         </div>
       </div>
     </div>

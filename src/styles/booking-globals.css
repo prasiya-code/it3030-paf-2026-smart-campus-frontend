@@ -1,22 +1,14 @@
 /**
- * BOOKING MODULE GLOBAL STYLES (Tailwind v4)
+ * BOOKING MODULE GLOBAL STYLES (Tailwind v3)
  * ===========================================
  * Isolated styling for booking pages only.
  * Import this in booking page components to apply these styles.
  * Does NOT affect other parts of the application.
  */
 
-@import "tailwindcss";
-
-/* Booking theme variables */
-@theme {
-  --color-booking-primary: #3b82f6;
-  --color-booking-primary-hover: #2563eb;
-  --color-booking-pending: #f59e0b;
-  --color-booking-approved: #10b981;
-  --color-booking-rejected: #ef4444;
-  --color-booking-cancelled: #64748b;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Booking Page Layout */
 
