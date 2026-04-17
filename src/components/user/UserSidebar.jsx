@@ -18,6 +18,7 @@ const UserSidebar = () => {
 
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
+
           <li>
             <NavLink
               to="/dashboard"
@@ -33,13 +34,10 @@ const UserSidebar = () => {
               <span className="font-medium">Dashboard</span>
             </NavLink>
           </li>
+
           <li>
             <NavLink
-<<<<<<< HEAD
-              to="/tickets"
-=======
               to="/resources"
->>>>>>> feature/kawya-resource
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
@@ -48,18 +46,14 @@ const UserSidebar = () => {
                 }`
               }
             >
-<<<<<<< HEAD
-              <span>🎫</span>
-              <span className="font-medium">Tickets</span>
-=======
               <span>📦</span>
               <span className="font-medium">Resources</span>
->>>>>>> feature/kawya-resource
             </NavLink>
           </li>
+
           <li>
             <NavLink
-              to="/notifications"
+              to="/tickets"
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
@@ -68,15 +62,11 @@ const UserSidebar = () => {
                 }`
               }
             >
-              <span className="relative">
-                🔔
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                  3
-                </span>
-              </span>
-              <span className="font-medium">Notifications</span>
+              <span>🎫</span>
+              <span className="font-medium">Tickets</span>
             </NavLink>
           </li>
+
         </ul>
       </nav>
     </aside>
