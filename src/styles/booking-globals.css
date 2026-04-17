@@ -1,0 +1,239 @@
+/**
+ * BOOKING MODULE GLOBAL STYLES (Tailwind v4)
+ * ===========================================
+ * Isolated styling for booking pages only.
+ * Import this in booking page components to apply these styles.
+ * Does NOT affect other parts of the application.
+ */
+
+@import "tailwindcss";
+
+/* Booking theme variables */
+@theme {
+  --color-booking-primary: #3b82f6;
+  --color-booking-primary-hover: #2563eb;
+  --color-booking-pending: #f59e0b;
+  --color-booking-approved: #10b981;
+  --color-booking-rejected: #ef4444;
+  --color-booking-cancelled: #64748b;
+}
+
+/* Booking Page Layout */
+
+/* Page container - wraps entire booking page */
+  .booking-page {
+    @apply min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8 px-4 sm:px-6 lg:px-8;
+  }
+
+  .booking-page-content {
+    @apply max-w-7xl mx-auto;
+  }
+
+  /* Section headers */
+  .booking-section-header {
+    @apply mb-8;
+  }
+
+  .booking-title {
+    @apply text-3xl md:text-4xl font-bold text-slate-900 mb-2;
+  }
+
+  .booking-subtitle {
+    @apply text-slate-600 text-lg;
+  }
+
+  /* Card components */
+  .booking-card {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden;
+  }
+
+  .booking-card-header {
+    @apply px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between;
+  }
+
+  .booking-card-title {
+    @apply text-lg font-semibold text-slate-900;
+  }
+
+  .booking-card-body {
+    @apply p-6;
+  }
+
+  /* Filter/Search cards */
+  .booking-filters {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6;
+  }
+
+  .booking-filters-header {
+    @apply flex items-center gap-2 mb-4;
+  }
+
+  .booking-filters-icon {
+    @apply w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600;
+  }
+
+  /* Table styling */
+  .booking-table-container {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden;
+  }
+
+  .booking-table {
+    @apply min-w-full;
+  }
+
+  .booking-table-header {
+    @apply bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200;
+  }
+
+  .booking-table-header-cell {
+    @apply px-4 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider;
+  }
+
+  .booking-table-row {
+    @apply hover:bg-blue-50/50 transition-colors;
+  }
+
+  .booking-table-row-alt {
+    @apply bg-slate-50/30;
+  }
+
+  .booking-table-cell {
+    @apply px-4 py-3.5 whitespace-nowrap text-sm text-slate-700;
+  }
+
+  /* Code badge */
+  .booking-code {
+    @apply inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-md border border-blue-100;
+  }
+
+  /* Buttons */
+  .booking-btn-primary {
+    @apply px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium 
+           hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 
+           focus:ring-offset-2 transition-all shadow-sm;
+  }
+
+  .booking-btn-secondary {
+    @apply px-4 py-2 bg-white text-slate-700 border border-slate-300 rounded-lg font-medium 
+           hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 
+           focus:ring-offset-2 transition-all;
+  }
+
+  .booking-btn-danger {
+    @apply px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium 
+           hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 
+           focus:ring-offset-2 transition-all shadow-sm;
+  }
+
+  .booking-btn-success {
+    @apply px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg font-medium 
+           hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 
+           focus:ring-offset-2 transition-all shadow-sm;
+  }
+
+  .booking-btn-warning {
+    @apply px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium 
+           hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-orange-500 
+           focus:ring-offset-2 transition-all shadow-sm;
+  }
+
+  .booking-btn-disabled {
+    @apply px-4 py-2 bg-slate-200 text-slate-500 rounded-lg font-medium cursor-not-allowed;
+  }
+
+  /* Input fields */
+  .booking-input {
+    @apply w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm bg-white
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+           placeholder:text-slate-400;
+  }
+
+  .booking-select {
+    @apply w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm bg-white
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+
+  .booking-textarea {
+    @apply w-full px-4 py-3 border border-slate-300 rounded-lg text-sm
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+           resize-y placeholder:text-slate-400;
+  }
+
+  /* Status badges */
+  .booking-badge-pending {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium 
+           bg-amber-100 text-amber-800 border border-amber-200;
+  }
+
+  .booking-badge-approved {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium 
+           bg-emerald-100 text-emerald-800 border border-emerald-200;
+  }
+
+  .booking-badge-rejected {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium 
+           bg-red-100 text-red-800 border border-red-200;
+  }
+
+  .booking-badge-cancelled {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium 
+           bg-slate-100 text-slate-800 border border-slate-200;
+  }
+
+  /* User avatar */
+  .booking-avatar {
+    @apply w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold;
+  }
+
+  /* Info/Alert boxes */
+  .booking-info-box {
+    @apply bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4;
+  }
+
+  .booking-warning-box {
+    @apply bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3;
+  }
+
+  .booking-error-box {
+    @apply bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3;
+  }
+
+  /* Stats cards */
+  .booking-stat-card {
+    @apply rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  .booking-stat-icon {
+    @apply w-10 h-10 rounded-lg flex items-center justify-center shadow-sm;
+  }
+
+  .booking-stat-label {
+    @apply text-sm font-medium text-slate-600;
+  }
+
+  .booking-stat-value {
+    @apply text-2xl font-bold text-slate-900 mt-1;
+  }
+
+  /* Quick action buttons */
+  .booking-quick-action {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm;
+  }
+
+  /* Loading state */
+  .booking-loading {
+    @apply flex flex-col items-center justify-center py-16;
+  }
+
+  .booking-spinner {
+    @apply animate-spin rounded-full h-12 w-12 border-4 border-blue-100 border-t-blue-600;
+  }
+
+  /* Empty state */
+  .booking-empty {
+    @apply flex flex-col items-center justify-center py-16 px-4;
+  }
+
+  .booking-empty-icon {
+    @apply w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4;
+  }

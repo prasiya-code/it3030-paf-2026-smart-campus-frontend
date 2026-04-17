@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { AuthProvider } from './context/AuthContext';
 import AppRoutes from './routes/AppRoutes';
 
@@ -7,6 +8,12 @@ function App() {
       <AppRoutes />
     </AuthProvider>
   );
+=======
+import AppRoutes from './routes/AppRoutes';
+
+function App() {
+  return <AppRoutes />;
+>>>>>>> origin/dev
 }
 
 export default App;

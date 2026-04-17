@@ -17,21 +17,21 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center py-12">
+    <div className="flex items-center justify-center min-h-screen py-12 bg-slate-50">
       <div className="w-full max-w-md mx-4">
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
           {/* Header */}
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">Reset Password</h2>
-            <p className="text-gray-600">Enter your email to receive a password reset link</p>
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Reset Password</h2>
+            <p className="text-slate-600">Enter your email to receive a password reset link</p>
           </div>
 
           {/* Form */}
           {!isSubmitted ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email Input */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
                   Email Address
                 </label>
                 <input
@@ -39,7 +39,7 @@ const ForgotPasswordPage = () => {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                   placeholder="Enter your email"
                   required
                 />
@@ -49,7 +49,7 @@ const ForgotPasswordPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-500/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
@@ -69,11 +69,11 @@ const ForgotPasswordPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Check Your Email</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Check Your Email</h3>
+              <p className="text-slate-600 mb-4">
                 We've sent a password reset link to <span className="font-medium">{email}</span>
               </p>
-              <p className="text-sm text-gray-500 mb-6">
+              <p className="text-sm text-slate-500 mb-6">
                 (Note: This is a UI demonstration. No email was actually sent.)
               </p>
               <button

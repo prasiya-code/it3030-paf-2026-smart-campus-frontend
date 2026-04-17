@@ -13,10 +13,16 @@ const Navbar = () => {
   ];
 
   return (
+<<<<<<< HEAD
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand - Left side */}
+=======
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+>>>>>>> origin/dev
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">O</span>
@@ -27,8 +33,12 @@ const Navbar = () => {
             </div>
           </Link>
 
+<<<<<<< HEAD
           {/* Centered Navigation Links */}
           <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
+=======
+          <div className="hidden md:flex items-center gap-8">
+>>>>>>> origin/dev
             {navLinks.map((link) => (
               <Link
                 key={link.name}
@@ -40,6 +50,7 @@ const Navbar = () => {
             ))}
           </div>
 
+<<<<<<< HEAD
           {/* Right side buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Link 
@@ -54,6 +65,13 @@ const Navbar = () => {
           </div>
 
           {/* Mobile menu button */}
+=======
+          <div className="hidden md:flex items-center gap-3">
+            <Button variant="ghost">Sign In</Button>
+            <Button>Get Started</Button>
+          </div>
+
+>>>>>>> origin/dev
           <button
             className="md:hidden p-2 text-slate-600 hover:text-slate-900"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -68,7 +86,10 @@ const Navbar = () => {
           </button>
         </div>
 
+<<<<<<< HEAD
         {/* Mobile menu */}
+=======
+>>>>>>> origin/dev
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-slate-200">
             <div className="flex flex-col gap-4">
@@ -83,6 +104,7 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-slate-200">
+<<<<<<< HEAD
                 <Link 
                   to="/login" 
                   onClick={() => setIsMenuOpen(false)}
@@ -93,6 +115,10 @@ const Navbar = () => {
                 <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
                   <Button className="justify-center">Get Started</Button>
                 </Link>
+=======
+                <Button variant="ghost" className="justify-start">Sign In</Button>
+                <Button className="justify-center">Get Started</Button>
+>>>>>>> origin/dev
               </div>
             </div>
           </div>
