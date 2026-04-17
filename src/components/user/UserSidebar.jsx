@@ -48,6 +48,26 @@ const UserSidebar = () => {
               <span className="font-medium">Tickets</span>
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/notifications"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <span className="relative">
+                🔔
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  3
+                </span>
+              </span>
+              <span className="font-medium">Notifications</span>
+            </NavLink>
+          </li>
         </ul>
       </nav>
     </aside>
