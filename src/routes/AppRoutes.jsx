@@ -12,6 +12,8 @@ import Contact from "../pages/public/Contact";
 import Features from "../pages/public/Features";
 import Dashboard from "../pages/user/Dashboard";
 import Tickets from "../pages/user/Tickets";
+import ProfilePage from "../pages/user/ProfilePage";
+
 
 function AppRoutes() {
   return (
@@ -36,6 +38,7 @@ function AppRoutes() {
         >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tickets" element={<Tickets />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
       </Routes>
