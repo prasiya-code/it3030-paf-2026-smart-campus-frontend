@@ -16,6 +16,9 @@ import Tickets from "../pages/user/Tickets";
 import ProfilePage from "../pages/user/ProfilePage";
 import ResourceListPage from "../pages/resources/ResourceListPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import AdminNotificationsPage from "../pages/admin/AdminNotificationsPage";
+import AdminProfilePage from "../pages/admin/AdminProfilePage";
+import UserManagementPage from "../pages/admin/UserManagementPage";
 
 function AppRoutes() {
   return (
@@ -53,6 +56,9 @@ function AppRoutes() {
           }
         >
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/users" element={<UserManagementPage />} />
+          <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+          <Route path="/admin/profile" element={<AdminProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

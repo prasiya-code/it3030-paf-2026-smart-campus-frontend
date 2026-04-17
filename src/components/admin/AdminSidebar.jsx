@@ -35,6 +35,21 @@ const AdminSidebar = () => {
           </li>
           <li>
             <NavLink
+              to="/admin/users"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
+                  isActive
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`
+              }
+            >
+              <span>👥</span>
+              <span className="font-medium">Users</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
               to="/admin/resources"
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-md transition-all ${

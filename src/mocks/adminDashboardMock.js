@@ -304,9 +304,9 @@ export const activityFeed = [
   {
     id: 4,
     action: 'Ticket Resolved',
-    description: 'Ticket TK-2024-004 marked as RESOLVED by Cleaning Staff',
-    actor: 'Cleaning Staff',
-    actorEmail: 'cleaning@example.com',
+    description: 'Ticket TK-2024-004 marked as RESOLVED by Admin',
+    actor: 'Admin User',
+    actorEmail: 'admin@example.com',
     timestamp: '2024-04-16T18:00:00Z'
   },
   {
