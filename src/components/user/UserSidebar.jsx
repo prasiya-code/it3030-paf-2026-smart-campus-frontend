@@ -35,7 +35,11 @@ const UserSidebar = () => {
           </li>
           <li>
             <NavLink
+<<<<<<< HEAD
               to="/tickets"
+=======
+              to="/resources"
+>>>>>>> feature/kawya-resource
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
@@ -44,8 +48,13 @@ const UserSidebar = () => {
                 }`
               }
             >
+<<<<<<< HEAD
               <span>🎫</span>
               <span className="font-medium">Tickets</span>
+=======
+              <span>📦</span>
+              <span className="font-medium">Resources</span>
+>>>>>>> feature/kawya-resource
             </NavLink>
           </li>
         </ul>
