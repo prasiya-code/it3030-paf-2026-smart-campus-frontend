@@ -1,13 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-const TicketTable = () => {
-  const tickets = [
-    { id: 'T-001', title: 'Lab equipment not working', category: 'Technical', priority: 'High', status: 'Open', date: '2026-04-15' },
-    { id: 'T-002', title: 'Request for new software', category: 'Software', priority: 'Medium', status: 'In Progress', date: '2026-04-14' },
-    { id: 'T-003', title: 'Room temperature issue', category: 'Facility', priority: 'Low', status: 'Resolved', date: '2026-04-12' },
-    { id: 'T-004', title: 'Projector bulb replacement', category: 'Equipment', priority: 'Medium', status: 'Open', date: '2026-04-16' },
-    { id: 'T-005', title: 'WiFi connectivity problem', category: 'Technical', priority: 'High', status: 'In Progress', date: '2026-04-13' },
-  ];
+const TicketTable = ({ tickets = [] }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -33,8 +27,7 @@ const TicketTable = () => {
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Ticket ID</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Title</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Ticket Code</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Category</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Priority</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
@@ -45,8 +38,7 @@ const TicketTable = () => {
           <tbody className="divide-y divide-gray-200">
             {tickets.map((ticket) => (
               <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{ticket.id}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{ticket.title}</td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">{ticket.ticketCode || ticket.id}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">{ticket.category}</td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
@@ -58,11 +50,16 @@ const TicketTable = () => {
                     {ticket.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{ticket.date}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-'}
+                </td>
                 <td className="px-6 py-4">
-                  <button className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+                  <Link
+                    to={`/tickets/${ticket.id}`}
+                    className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                  >
                     View
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}

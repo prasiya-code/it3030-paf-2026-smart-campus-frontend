@@ -1,30 +1,35 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createTicket } from '../../api/ticketApi';
 
 const TicketCreateForm = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    resource: '',
+    resourceId: '',
     category: '',
     priority: '',
     description: '',
     location: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
+    preferredContactName: '',
+    preferredContactEmail: '',
+    preferredContactPhone: '',
     attachments: []
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const resourceOptions = [
     { value: '', label: 'Select a resource' },
-    { value: 'lab-a', label: 'Lab Room A' },
-    { value: 'lab-b', label: 'Lab Room B' },
-    { value: 'classroom-101', label: 'Classroom 101' },
-    { value: 'classroom-102', label: 'Classroom 102' },
-    { value: 'auditorium', label: 'Main Auditorium' },
-    { value: 'library', label: 'Library' },
-    { value: 'projector-1', label: 'Projector 1' },
-    { value: 'ac-unit-1', label: 'AC Unit 1' }
+    { value: '1', label: 'Lab Room A' },
+    { value: '2', label: 'Lab Room B' },
+    { value: '3', label: 'Classroom 101' },
+    { value: '4', label: 'Classroom 102' },
+    { value: '5', label: 'Main Auditorium' },
+    { value: '6', label: 'Library' },
+    { value: '7', label: 'Projector 1' },
+    { value: '8', label: 'AC Unit 1' }
   ];
 
   const categoryOptions = [
@@ -46,7 +51,9 @@ const TicketCreateForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Convert resourceId to number for backend compatibility
+    const processedValue = name === 'resourceId' ? (value ? parseInt(value, 10) : '') : value;
+    setFormData(prev => ({ ...prev, [name]: processedValue }));
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -70,15 +77,47 @@ const TicketCreateForm = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    console.log('Form submitted:', formData);
-    alert('Ticket created successfully! (Console log)');
+
+    setLoading(true);
+    setSubmitError('');
+
+    try {
+      const payload = {
+        category: formData.category,
+        priority: formData.priority,
+        description: formData.description,
+        resourceId: formData.resourceId || null,
+        location: formData.location || null,
+        preferredContactName: formData.preferredContactName || null,
+        preferredContactEmail: formData.preferredContactEmail || null,
+        preferredContactPhone: formData.preferredContactPhone || null
+      };
+
+      console.log('Sending payload:', payload);
+
+      await createTicket(payload);
+      navigate('/tickets');
+    } catch (err) {
+      console.error('Error creating ticket:', err);
+      // Try to extract backend error message
+      let errorMessage = 'Failed to create ticket. Please try again.';
+      if (err && typeof err === 'object') {
+        if (err.message) errorMessage = err.message;
+        else if (err.error) errorMessage = err.error;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      setSubmitError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -87,14 +126,19 @@ const TicketCreateForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6">
+      {submitError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+          {submitError}
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Resource <span className="text-gray-400">(Optional)</span>
           </label>
           <select
-            name="resource"
-            value={formData.resource}
+            name="resourceId"
+            value={formData.resourceId}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
           >
@@ -183,8 +227,8 @@ const TicketCreateForm = () => {
             </label>
             <input
               type="text"
-              name="contactName"
-              value={formData.contactName}
+              name="preferredContactName"
+              value={formData.preferredContactName}
               onChange={handleChange}
               placeholder="Your name"
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -197,8 +241,8 @@ const TicketCreateForm = () => {
             </label>
             <input
               type="email"
-              name="contactEmail"
-              value={formData.contactEmail}
+              name="preferredContactEmail"
+              value={formData.preferredContactEmail}
               onChange={handleChange}
               placeholder="your.email@example.com"
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -211,8 +255,8 @@ const TicketCreateForm = () => {
             </label>
             <input
               type="tel"
-              name="contactPhone"
-              value={formData.contactPhone}
+              name="preferredContactPhone"
+              value={formData.preferredContactPhone}
               onChange={handleChange}
               placeholder="+1 234 567 8900"
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -263,9 +307,12 @@ const TicketCreateForm = () => {
         </button>
         <button
           type="submit"
-          className="px-6 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+          disabled={loading}
+          className={`px-6 py-2.5 bg-primary-600 text-white rounded-lg font-medium transition-colors ${
+            loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary-700'
+          }`}
         >
-          Submit Ticket
+          {loading ? 'Creating...' : 'Submit Ticket'}
         </button>
       </div>
     </form>
