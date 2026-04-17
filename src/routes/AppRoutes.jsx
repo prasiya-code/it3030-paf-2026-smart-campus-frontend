@@ -10,7 +10,12 @@ import Features from "../pages/public/Features";
 
 import Dashboard from "../pages/user/Dashboard";
 import Tickets from "../pages/user/Tickets";
+<<<<<<< HEAD
 import ResourceListPage from "../pages/resources/ResourceListPage";
+=======
+import ProfilePage from "../pages/user/ProfilePage";
+
+>>>>>>> feature/inupama-notifications-auth
 
 function AppRoutes() {
   return (
@@ -30,6 +35,11 @@ function AppRoutes() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resources" element={<ResourceListPage />} />
           <Route path="/tickets" element={<Tickets />} />
+<<<<<<< HEAD
+=======
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+>>>>>>> feature/inupama-notifications-auth
         </Route>
 
       </Routes>
