@@ -40,7 +40,9 @@ const Home = () => {
               for students, faculty, and administrators.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg">Get Started</Button>
+              <Link to="/signup">
+                <Button size="lg">Get Started</Button>
+              </Link>
               <Button variant="secondary" size="lg">Learn More</Button>
             </div>
           </div>
@@ -83,9 +85,11 @@ const Home = () => {
             <p className="text-lg text-primary-100 mb-8">
               Join thousands of students and faculty using Opsora today.
             </p>
-            <Button variant="secondary" size="lg">
-              Create Your Account
-            </Button>
+            <Link to="/signup">
+              <Button variant="secondary" size="lg">
+                Create Your Account
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
