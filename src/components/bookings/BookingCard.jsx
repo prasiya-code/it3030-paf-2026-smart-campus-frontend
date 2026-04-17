@@ -8,7 +8,7 @@ import {
   getEndTime,
   getBookingPurpose,
   getExpectedAttendees,
-} from "../../utils/helpers";
+} from "../../pages/bookings/bookingHelpers";
 
 /**
  * BookingCard Component

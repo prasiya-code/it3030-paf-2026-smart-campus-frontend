@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../../api/userApi";
 import { getAllResources } from "../../api/resourceApi";
 import { getMyBookings, getAllBookings, cancelBooking as apiCancelBooking } from "../../api/bookingApi";
 import BookingTable from "../../components/bookings/BookingTable";
-import { getBookingCode, includesText } from "../../utils/helpers";
+import { getBookingCode, includesText } from "./bookingHelpers";
+
+// Temporary hardcoded userId for testing (userApi does not exist)
+const userId = 4;
 
 function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
@@ -27,17 +29,10 @@ function MyBookingsPage() {
     setError(null);
     setAuthWarning(null);
 
-    // Try to fetch current user safely
-    let user = null;
-    try {
-      user = await getCurrentUser();
-      setCurrentUser(user || null);
-    } catch (err) {
-      // Handle auth errors gracefully - don't crash the page
-      console.warn("[MY_BOOKINGS] Could not fetch current user:", err.message || err);
-      setAuthWarning("Could not detect logged-in user. Showing available booking data without authentication context.");
-      setCurrentUser(null);
-    }
+    // Temporary: use hardcoded userId instead of fetching current user
+    // (userApi module does not exist in project)
+    let user = { id: userId };
+    setCurrentUser(user);
 
     // Fetch bookings with fallback
     await fetchBookingsSafely(user);

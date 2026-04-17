@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAllBookings } from "../../api/bookingApi";
 import StatusBadge from "../../components/bookings/StatusBadge";
-import { getResourceName, getUserName, getBookingCode, getBookingDate, getStartTime, getEndTime, includesText } from "../../utils/helpers";
+import { getResourceName, getUserName, getBookingCode, getBookingDate, getStartTime, getEndTime, includesText } from "./bookingHelpers";
 
 function BookingDashboardPage() {
     const [bookings, setBookings] = useState([]);

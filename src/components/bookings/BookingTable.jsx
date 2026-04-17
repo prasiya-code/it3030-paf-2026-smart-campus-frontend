@@ -7,7 +7,7 @@ import {
   getBookingDate,
   getStartTime,
   getEndTime,
-} from "../../utils/helpers";
+} from "../../pages/bookings/bookingHelpers";
 
 /**
  * BookingTable Component

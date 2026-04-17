@@ -19,6 +19,10 @@ import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AdminNotificationsPage from "../pages/admin/AdminNotificationsPage";
 import AdminProfilePage from "../pages/admin/AdminProfilePage";
 import UserManagementPage from "../pages/admin/UserManagementPage";
+import BookingDashboardPage from "../pages/bookings/BookingDashboardPage";
+import BookingCreatePage from "../pages/bookings/BookingCreatePage";
+import MyBookingsPage from "../pages/bookings/MyBookingsPage";
+import BookingListPage from "../pages/bookings/BookingListPage";
 
 function AppRoutes() {
   return (
@@ -46,6 +50,9 @@ function AppRoutes() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/resources" element={<ResourceListPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/booking-dashboard" element={<BookingDashboardPage />} />
+          <Route path="/create-booking" element={<BookingCreatePage />} />
+          <Route path="/my-bookings" element={<MyBookingsPage />} />
         </Route>
 
         <Route
@@ -59,6 +66,8 @@ function AppRoutes() {
           <Route path="/admin/users" element={<UserManagementPage />} />
           <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
           <Route path="/admin/profile" element={<AdminProfilePage />} />
+          <Route path="/admin/bookings" element={<BookingListPage />} />
+          <Route path="/admin/manage-bookings" element={<BookingListPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
