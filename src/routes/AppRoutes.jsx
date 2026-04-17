@@ -7,6 +7,7 @@ import Contact from "../pages/public/Contact";
 import Features from "../pages/public/Features";
 import Dashboard from "../pages/user/Dashboard";
 import Tickets from "../pages/user/Tickets";
+import CreateTicket from "../pages/user/CreateTicket";
 
 function AppRoutes() {
   return (
@@ -22,6 +23,7 @@ function AppRoutes() {
         <Route element={<UserLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tickets" element={<Tickets />} />
+          <Route path="/tickets/create" element={<CreateTicket />} />
         </Route>
       </Routes>
     </BrowserRouter>
