@@ -6,6 +6,7 @@ import About from "../pages/public/About";
 import Contact from "../pages/public/Contact";
 import Features from "../pages/public/Features";
 import Dashboard from "../pages/user/Dashboard";
+import Tickets from "../pages/user/Tickets";
 
 function AppRoutes() {
   return (
@@ -20,6 +21,7 @@ function AppRoutes() {
 
         <Route element={<UserLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/tickets" element={<Tickets />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -17,7 +17,7 @@ const UserSidebar = () => {
       </div>
 
       <nav className="flex-1 p-4">
-        <ul>
+        <ul className="space-y-2">
           <li>
             <NavLink
               to="/dashboard"
@@ -31,6 +31,21 @@ const UserSidebar = () => {
             >
               <span>📊</span>
               <span className="font-medium">Dashboard</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/tickets"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <span>🎫</span>
+              <span className="font-medium">Tickets</span>
             </NavLink>
           </li>
         </ul>
