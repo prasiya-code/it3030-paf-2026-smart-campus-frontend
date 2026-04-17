@@ -33,6 +33,21 @@ const UserSidebar = () => {
               <span className="font-medium">Dashboard</span>
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/resources"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <span>📦</span>
+              <span className="font-medium">Resources</span>
+            </NavLink>
+          </li>
         </ul>
       </nav>
     </aside>
