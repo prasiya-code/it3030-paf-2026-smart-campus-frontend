@@ -90,6 +90,7 @@ function BookingCreatePage() {
     try {
       setLoadingResources(true);
       const res = await getAllResources();
+      console.log("RESOURCES:", res);
       setResources(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error("Failed to load resources:", err);

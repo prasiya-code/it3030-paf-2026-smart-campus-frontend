@@ -47,7 +47,10 @@ function MyBookingsPage() {
     try {
       // Try to get user's bookings first
       const data = await getMyBookings();
-      const arr = data || [];
+      console.log("MY BOOKINGS:", data);
+      console.log("Is array:", Array.isArray(data));
+      console.log("Data length:", data?.length);
+      const arr = Array.isArray(data) ? data : [];
       setBookings(arr);
       setDisplayedBookings(arr);
       setError(null);
@@ -57,7 +60,8 @@ function MyBookingsPage() {
       // Fallback: try to get all bookings if user bookings fail
       try {
         const fallbackData = await getAllBookings();
-        const arr = fallbackData || [];
+        console.log("FALLBACK ALL BOOKINGS:", fallbackData);
+        const arr = Array.isArray(fallbackData) ? fallbackData : [];
         setBookings(arr);
         setDisplayedBookings(arr);
         if (!authWarning) {

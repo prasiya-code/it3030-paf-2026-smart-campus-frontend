@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './axios';
 
 const API_BASE_URL = '/api/bookings';
 
@@ -97,7 +97,7 @@ const generateBookingCode = () => {
 
 export const getAllBookings = async () => {
   try {
-    const response = await axios.get(API_BASE_URL);
+    const response = await api.get(API_BASE_URL);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     return handleApiError(error, [...mockBookings]);
@@ -106,7 +106,7 @@ export const getAllBookings = async () => {
 
 export const getMyBookings = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/my-bookings`);
+    const response = await api.get(`${API_BASE_URL}/my-bookings`);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     // Return all mock bookings as fallback (simulating user's bookings)
@@ -116,7 +116,7 @@ export const getMyBookings = async () => {
 
 export const getBookingById = async (id) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/${id}`);
+    const response = await api.get(`${API_BASE_URL}/${id}`);
     return response.data;
   } catch (error) {
     const booking = mockBookings.find(b => b.id === parseInt(id));
@@ -126,7 +126,7 @@ export const getBookingById = async (id) => {
 
 export const createBooking = async (bookingData) => {
   try {
-    const response = await axios.post(API_BASE_URL, bookingData);
+    const response = await api.post(API_BASE_URL, bookingData);
     return response.data;
   } catch (error) {
     // Simulate successful creation with mock data
@@ -144,7 +144,7 @@ export const createBooking = async (bookingData) => {
 
 export const cancelBooking = async (id) => {
   try {
-    const response = await axios.patch(`${API_BASE_URL}/${id}/cancel`);
+    const response = await api.patch(`${API_BASE_URL}/${id}/cancel`);
     return response.data;
   } catch (error) {
     // Simulate successful cancellation in mock data
@@ -162,7 +162,7 @@ export const cancelBooking = async (id) => {
 
 export const updateBooking = async (id, bookingData) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/${id}`, bookingData);
+    const response = await api.put(`${API_BASE_URL}/${id}`, bookingData);
     return response.data;
   } catch (error) {
     // Simulate successful update in mock data
@@ -177,7 +177,7 @@ export const updateBooking = async (id, bookingData) => {
 
 export const updateBookingWithAdmin = async (id, updateData, adminId) => {
   try {
-    const response = await axios.patch(`${API_BASE_URL}/${id}/admin-update`, {
+    const response = await api.patch(`${API_BASE_URL}/${id}/admin-update`, {
       ...updateData,
       adminId
     });
@@ -207,7 +207,7 @@ export const rejectBooking = async (id, adminReason, adminId) => {
 
 export const searchBookings = async (query) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
+    const response = await api.get(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     // Simulate search in mock data
