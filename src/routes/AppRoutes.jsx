@@ -21,6 +21,8 @@ import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AdminNotificationsPage from "../pages/admin/AdminNotificationsPage";
 import AdminProfilePage from "../pages/admin/AdminProfilePage";
 import UserManagementPage from "../pages/admin/UserManagementPage";
+import AdminTickets from "../pages/admin/AdminTickets";
+import AdminTicketDetails from "../pages/admin/AdminTicketDetails";
 
 function AppRoutes() {
   return (
@@ -61,6 +63,8 @@ function AppRoutes() {
         >
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/users" element={<UserManagementPage />} />
+          <Route path="/admin/tickets" element={<AdminTickets />} />
+          <Route path="/admin/tickets/:id" element={<AdminTicketDetails />} />
           <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
           <Route path="/admin/profile" element={<AdminProfilePage />} />
         </Route>
