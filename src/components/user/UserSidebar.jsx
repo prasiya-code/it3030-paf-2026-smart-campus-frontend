@@ -67,9 +67,51 @@ const UserSidebar = () => {
             </NavLink>
           </li>
 
+          <li>
+            <NavLink
+              to="/notifications"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <span className="relative">
+                🔔
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  3
+                </span>
+              </span>
+              <span className="font-medium">Notifications</span>
+            </NavLink>
+          </li>
+
         </ul>
       </nav>
-      
+
+      {/* User Profile Section */}
+      <div className="p-4 border-t border-gray-800">
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              isActive
+                ? 'bg-primary-600 text-white'
+                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+            }`
+          }
+        >
+          <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-white font-bold text-sm">IN</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-sm truncate">Inupama</div>
+            <div className="text-xs text-gray-400">USER</div>
+          </div>
+        </NavLink>
+      </div>
     </aside>
   );
 };
