@@ -11,19 +11,6 @@ const ResourceEditPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Role detection - defaults to 'user' for production safety
-  // In production, role would come from backend auth
-  const [isAdmin, setIsAdmin] = useState(() => {
-    const storedRole = localStorage.getItem('userRole');
-    return (storedRole || 'user') === 'admin';
-  });
-
-  // Redirect if not admin
-  useEffect(() => {
-    if (!isAdmin) {
-      navigate('/resources', { replace: true });
-    }
-  }, [isAdmin, navigate]);
 
   const loadResource = async () => {
     try {
@@ -54,7 +41,7 @@ const ResourceEditPage = () => {
       };
       
       await updateResource(id, resourceData);
-      navigate('/resources');
+      navigate('/admin/resources');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update resource. Please try again.');
       console.error('Error updating resource:', err);
@@ -93,11 +80,6 @@ const ResourceEditPage = () => {
         </div>
       </div>
     );
-  }
-
-  // Don't render form if not admin
-  if (!isAdmin) {
-    return null; // Will redirect via useEffect
   }
 
   return (
