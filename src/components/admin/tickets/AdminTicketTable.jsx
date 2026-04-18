@@ -1,59 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const AdminTicketTable = () => {
-  const sampleTickets = [
-    {
-      id: 1,
-      ticketCode: 'TKT-001',
-      category: 'MAINTENANCE',
-      priority: 'HIGH',
-      status: 'Open',
-      createdBy: 'Alice Johnson',
-      assignedTo: 'Unassigned',
-      createdAt: '2024-01-15T10:30:00',
-    },
-    {
-      id: 2,
-      ticketCode: 'TKT-002',
-      category: 'INCIDENT',
-      priority: 'URGENT',
-      status: 'In Progress',
-      createdBy: 'Bob Smith',
-      assignedTo: 'John Smith',
-      createdAt: '2024-01-14T14:20:00',
-    },
-    {
-      id: 3,
-      ticketCode: 'TKT-003',
-      category: 'REPAIR',
-      priority: 'MEDIUM',
-      status: 'Resolved',
-      createdBy: 'Carol White',
-      assignedTo: 'Sarah Johnson',
-      createdAt: '2024-01-13T09:15:00',
-    },
-    {
-      id: 4,
-      ticketCode: 'TKT-004',
-      category: 'CLEANING',
-      priority: 'LOW',
-      status: 'Open',
-      createdBy: 'David Brown',
-      assignedTo: 'Unassigned',
-      createdAt: '2024-01-12T16:45:00',
-    },
-    {
-      id: 5,
-      ticketCode: 'TKT-005',
-      category: 'OTHER',
-      priority: 'MEDIUM',
-      status: 'Rejected',
-      createdBy: 'Emma Davis',
-      assignedTo: 'Mike Wilson',
-      createdAt: '2024-01-11T11:00:00',
-    },
-  ];
+const AdminTicketTable = ({ tickets = [], loading = false }) => {
+  const formatUser = (user) => {
+    if (!user) return 'Unassigned';
+    if (typeof user === 'string') return user;
+    if (user.firstName) return `${user.firstName} ${user.lastName || ''}`.trim();
+    if (user.name) return user.name;
+    return 'Unknown';
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -75,6 +30,25 @@ const AdminTicketTable = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden p-12 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mb-4"></div>
+        <p className="text-gray-500">Loading tickets...</p>
+      </div>
+    );
+  }
+
+  if (tickets.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden p-12 text-center">
+        <div className="text-4xl mb-3">🎫</div>
+        <h3 className="text-lg font-medium text-gray-900 mb-1">No tickets found</h3>
+        <p className="text-gray-500">There are currently no tickets matching your criteria.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -92,9 +66,9 @@ const AdminTicketTable = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {sampleTickets.map((ticket) => (
+            {tickets.map((ticket) => (
               <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{ticket.ticketCode}</td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">{ticket.ticketCode || ticket.id}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">{ticket.category}</td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
@@ -106,10 +80,10 @@ const AdminTicketTable = () => {
                     {ticket.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{ticket.createdBy}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{ticket.assignedTo}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">{formatUser(ticket.createdBy)}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">{formatUser(ticket.assignedTo)}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {new Date(ticket.createdAt).toLocaleDateString()}
+                  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-'}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex gap-2">

@@ -9,6 +9,17 @@ export const getMyTickets = async () => {
   }
 };
 
+export const getAllTickets = async (filters = {}) => {
+  try {
+    const queryParams = new URLSearchParams(filters).toString();
+    const url = queryParams ? `/api/tickets?${queryParams}` : '/api/tickets';
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
 export const getTicketById = async (id) => {
   try {
     const response = await api.get(`/api/tickets/${id}`);

@@ -89,20 +89,27 @@ const TicketCreateForm = () => {
     setSubmitError('');
 
     try {
-      const payload = {
-        category: formData.category,
-        priority: formData.priority,
-        description: formData.description,
-        resourceId: formData.resourceId || null,
-        location: formData.location || null,
-        preferredContactName: formData.preferredContactName || null,
-        preferredContactEmail: formData.preferredContactEmail || null,
-        preferredContactPhone: formData.preferredContactPhone || null
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('priority', formData.priority);
+      formDataToSend.append('description', formData.description);
+      
+      if (formData.resourceId) formDataToSend.append('resourceId', formData.resourceId);
+      if (formData.location) formDataToSend.append('location', formData.location);
+      if (formData.preferredContactName) formDataToSend.append('preferredContactName', formData.preferredContactName);
+      if (formData.preferredContactEmail) formDataToSend.append('preferredContactEmail', formData.preferredContactEmail);
+      if (formData.preferredContactPhone) formDataToSend.append('preferredContactPhone', formData.preferredContactPhone);
 
-      console.log('Sending payload:', payload);
+      // Append files if they exist
+      if (formData.attachments && formData.attachments.length > 0) {
+        formData.attachments.forEach(file => {
+          formDataToSend.append('attachments', file);
+        });
+      }
 
-      await createTicket(payload);
+      console.log('Sending multipart payload...');
+
+      await createTicket(formDataToSend);
       navigate('/tickets');
     } catch (err) {
       console.error('Error creating ticket:', err);
