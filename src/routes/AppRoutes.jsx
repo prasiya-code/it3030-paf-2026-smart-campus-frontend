@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
+import RoleBasedRoute from "../components/auth/RoleBasedRoute";
+import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 import LoginPage from "../pages/auth/LoginPage";
 import SignUpPage from "../pages/auth/SignUpPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
@@ -32,6 +34,7 @@ function AppRoutes() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
         </Route>
 
         <Route
@@ -51,7 +54,9 @@ function AppRoutes() {
         <Route
           element={
             <ProtectedRoute>
-              <AdminLayout />
+              <RoleBasedRoute allowedRoles={['ADMIN']}>
+                <AdminLayout />
+              </RoleBasedRoute>
             </ProtectedRoute>
           }
         >
