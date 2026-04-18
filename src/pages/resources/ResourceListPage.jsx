@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ResourceTable from '../../components/resources/ResourceTable';
-import { getAllResources, searchResources } from '../../api/resourceApi';
+import { getAllResources } from '../../api/resourceApi';
 
 const RESOURCE_TYPES = [
   'LECTURE_HALL',
@@ -16,6 +16,7 @@ const RESOURCE_STATUSES = [
 
 const ResourceListPage = () => {
   const [resources, setResources] = useState([]);
+  const [filteredResources, setFilteredResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,21 +32,22 @@ const ResourceListPage = () => {
       setLoading(true);
       setError(null);
       
-      // Get resources from API (will use mock data if API fails)
+      // Get resources from backend API
       const data = await getAllResources();
       
       // Ensure we always have an array
       const safeData = Array.isArray(data) ? data : [];
       setResources(safeData);
-      
-      // If we're using mock data, show a subtle message
-      if (safeData.length > 0 && safeData[0].id <= 4) {
-        console.log('Using demo data - API server not available');
-      }
+      setFilteredResources(safeData);
       
     } catch (err) {
       console.error('Error loading resources:', err);
-      setError('Unable to connect to server. Showing demo data.');
+      // Show actual error from backend response
+      const errorMessage = err.response?.data?.message 
+        || err.response?.data?.error 
+        || err.message 
+        || 'Failed to load resources';
+      setError(`Error: ${errorMessage}`);
       // Set empty array to prevent crashes
       setResources([]);
     } finally {
@@ -58,41 +60,37 @@ const ResourceListPage = () => {
     loadResources();
   }, []);
 
-  // Handle search with error handling
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      loadResources();
+  // Client-side search filtering
+  const handleSearch = () => {
+    const query = searchQuery.trim().toLowerCase();
+    
+    if (!query) {
+      setFilteredResources(resources);
       return;
     }
-
-    try {
-      setLoading(true);
-      setError(null);
+    
+    const filtered = resources.filter(resource => {
+      const nameMatch = resource.name?.toLowerCase().includes(query);
+      const typeMatch = resource.type?.toLowerCase().includes(query);
+      const locationMatch = resource.location?.toLowerCase().includes(query);
+      const codeMatch = resource.code?.toLowerCase().includes(query);
       
-      const data = await searchResources(searchQuery);
-      const safeData = Array.isArray(data) ? data : [];
-      setResources(safeData);
-      
-    } catch (err) {
-      console.error('Error searching resources:', err);
-      setError('Search failed. Please try again.');
-      setResources([]);
-    } finally {
-      setLoading(false);
-    }
+      return nameMatch || typeMatch || locationMatch || codeMatch;
+    });
+    
+    setFilteredResources(filtered);
   };
 
-  // Clear all filters and reload data
+  // Clear all filters
   const clearFilters = () => {
     setSearchQuery('');
     setTypeFilter('');
     setStatusFilter('');
-    loadResources();
+    setFilteredResources(resources);
   };
 
-  // Filter resources by type and status (search is handled by API)
-  const filteredResources = (resources || []).filter(resource => {
-    if (!resource) return false;
+  // Filter resources by type and status (search is handled by client-side filtering)
+  const displayResources = filteredResources.filter(resource => {
     const matchesType = !typeFilter || resource.type === typeFilter;
     const matchesStatus = !statusFilter || resource.status === statusFilter;
     return matchesType && matchesStatus;
@@ -134,10 +132,25 @@ const ResourceListPage = () => {
                 <div className="relative flex-1">
                   <input
                     type="text"
-                    placeholder="Search resources by name or code..."
+                    placeholder="Search resources by name, type, or location..."
                     value={searchQuery || ''}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      // Real-time search
+                      const query = e.target.value.trim().toLowerCase();
+                      if (!query) {
+                        setFilteredResources(resources);
+                      } else {
+                        const filtered = resources.filter(resource => {
+                          const nameMatch = resource.name?.toLowerCase().includes(query);
+                          const typeMatch = resource.type?.toLowerCase().includes(query);
+                          const locationMatch = resource.location?.toLowerCase().includes(query);
+                          const codeMatch = resource.code?.toLowerCase().includes(query);
+                          return nameMatch || typeMatch || locationMatch || codeMatch;
+                        });
+                        setFilteredResources(filtered);
+                      }
+                    }}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     disabled={loading}
                   />
@@ -147,20 +160,18 @@ const ResourceListPage = () => {
                 </div>
                 <button
                   onClick={handleSearch}
-                  disabled={loading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-sm font-medium inline-flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium inline-flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  {loading ? 'Searching...' : 'Search'}
+                  Search
                 </button>
                 {/* Clear Filters */}
                 {(searchQuery || typeFilter || statusFilter) && (
                   <button
                     onClick={clearFilters}
-                    disabled={loading}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm font-medium inline-flex items-center gap-2"
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm font-medium inline-flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -168,6 +179,18 @@ const ResourceListPage = () => {
                     Clear
                   </button>
                 )}
+                {/* Refresh Button */}
+                <button
+                  onClick={loadResources}
+                  disabled={loading}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm font-medium inline-flex items-center gap-2"
+                  title="Refresh data"
+                >
+                  <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
               </div>
 
               {/* Type Filter */}
@@ -220,11 +243,11 @@ const ResourceListPage = () => {
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 className="text-xl font-semibold text-gray-900">
-              Resources ({filteredResources.length})
+              Resources ({displayResources.length})
             </h2>
           </div>
           <ResourceTable
-            resources={filteredResources}
+            resources={displayResources}
             onEdit={null}
             onDelete={null}
             loading={loading}

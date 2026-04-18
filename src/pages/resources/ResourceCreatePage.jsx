@@ -21,7 +21,11 @@ const ResourceCreatePage = () => {
       await createResource(resourceData);
       navigate('/admin/resources');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create resource. Please try again.');
+      const errorMessage = err.response?.data?.message 
+        || err.response?.data?.error 
+        || err.message 
+        || 'Failed to create resource';
+      setError(`Error: ${errorMessage}`);
       console.error('Error creating resource:', err);
     } finally {
       setLoading(false);

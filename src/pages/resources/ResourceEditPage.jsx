@@ -19,7 +19,11 @@ const ResourceEditPage = () => {
       const data = await getResourceById(id);
       setResource(data);
     } catch (err) {
-      setError('Failed to load resource. Please try again.');
+      const errorMessage = err.response?.data?.message 
+        || err.response?.data?.error 
+        || err.message 
+        || 'Failed to load resource';
+      setError(`Error: ${errorMessage}`);
       console.error('Error loading resource:', err);
     } finally {
       setLoading(false);
@@ -43,7 +47,11 @@ const ResourceEditPage = () => {
       await updateResource(id, resourceData);
       navigate('/admin/resources');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update resource. Please try again.');
+      const errorMessage = err.response?.data?.message 
+        || err.response?.data?.error 
+        || err.message 
+        || 'Failed to update resource';
+      setError(`Error: ${errorMessage}`);
       console.error('Error updating resource:', err);
     } finally {
       setSubmitting(false);

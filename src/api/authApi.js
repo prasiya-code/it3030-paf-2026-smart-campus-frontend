@@ -1,27 +1,44 @@
-import api from './axios';
+import axiosInstance from './axios';
 
 export const authApi = {
-  // Get current user information
-  getCurrentUser: async () => {
-    try {
-      const response = await api.get('/api/me');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Initiate Google OAuth login
+  // Google OAuth2 login
   loginWithGoogle: () => {
-    window.location.href = `${api.defaults.baseURL}/oauth2/authorization/google`;
+    window.location.href =
+      'http://localhost:8080/oauth2/authorization/google?prompt=select_account';
   },
 
-  // Logout user
+  // Email/password login
+  login: async (email, password) => {
+    const response = await axiosInstance.post('/api/auth/login', {
+      email,
+      password
+    });
+    return response.data;
+  },
+
+  // Email/password signup
+  signup: async (firstName, lastName, email, password, role) => {
+    const response = await axiosInstance.post('/api/auth/signup', {
+      firstName,
+      lastName,
+      email,
+      password,
+      role: role || 'USER'
+    });
+    return response.data;
+  },
+
+  // Get current user
+  getCurrentUser: async () => {
+    const response = await axiosInstance.get('/api/me');
+    return response.data;
+  },
+
+  // Logout
   logout: async () => {
-    try {
-      await api.post('/logout');
-    } catch (error) {
-      throw error;
-    }
-  }
+    await fetch('http://localhost:8080/api/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
+  },
 };
