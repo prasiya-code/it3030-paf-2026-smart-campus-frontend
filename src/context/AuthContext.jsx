@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '../api/authApi';
 
 const AuthContext = createContext();
 
@@ -13,45 +12,33 @@ export const useAuthContext = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // TODO: set back to true when backend is connected
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Fetch current user on app load
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const currentUser = await authApi.getCurrentUser();
-        setUser(currentUser);
-        setIsAuthenticated(true);
-      } catch (error) {
-        // User is not authenticated
-        setUser(null);
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // TODO: Uncomment this when backend is connected
+  // useEffect(() => {
+  //   const fetchCurrentUser = async () => {
+  //     try {
+  //       const currentUser = await authApi.getCurrentUser();
+  //       setUser(currentUser);
+  //       setIsAuthenticated(true);
+  //     } catch (error) {
+  //       setUser(null);
+  //       setIsAuthenticated(false);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchCurrentUser();
+  // }, []);
 
-    fetchCurrentUser();
-  }, []);
-
-  // Login helper
   const login = () => {
-    authApi.loginWithGoogle();
+    console.log('Login - backend not connected yet');
   };
 
-  // Logout helper
-  const logout = async () => {
-    try {
-      await authApi.logout();
-      setUser(null);
-      setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Logout failed:', error);
-      // Still clear local state even if logout request fails
-      setUser(null);
-      setIsAuthenticated(false);
-    }
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   const value = {
