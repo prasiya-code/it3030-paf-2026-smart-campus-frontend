@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createTicket } from '../../api/ticketApi';
+import { getAllResources } from '../../api/resourceApi';
 
 const TicketCreateForm = () => {
   const navigate = useNavigate();
@@ -19,18 +20,25 @@ const TicketCreateForm = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  
+  const [resourceOptions, setResourceOptions] = useState([{ value: '', label: 'Select a resource (Loading...)' }]);
 
-  const resourceOptions = [
-    { value: '', label: 'Select a resource' },
-    { value: '1', label: 'Lab Room A' },
-    { value: '2', label: 'Lab Room B' },
-    { value: '3', label: 'Classroom 101' },
-    { value: '4', label: 'Classroom 102' },
-    { value: '5', label: 'Main Auditorium' },
-    { value: '6', label: 'Library' },
-    { value: '7', label: 'Projector 1' },
-    { value: '8', label: 'AC Unit 1' }
-  ];
+  React.useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const resources = await getAllResources();
+        const options = resources.map(res => ({
+          value: res.id.toString(),
+          label: `${res.name} ${res.location ? `(${res.location})` : ''}`
+        }));
+        setResourceOptions([{ value: '', label: 'Select a resource' }, ...options]);
+      } catch (err) {
+        console.error('Failed to fetch resources:', err);
+        setResourceOptions([{ value: '', label: 'Select a resource (Error loading)' }]);
+      }
+    };
+    fetchResources();
+  }, []);
 
   const categoryOptions = [
     { value: '', label: 'Select category' },
