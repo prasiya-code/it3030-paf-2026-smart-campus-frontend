@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
+import { useAuthContext } from '../../context/AuthContext';
 
 const LoginPage = () => {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, isAdmin, login, loginWithGoogle, loading } =
+    useAuthContext();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -12,26 +13,43 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect authenticated users away from login page
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
+  // While auth is being checked, show nothing (spinner)
+  // This prevents the flash redirect on page load
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center 
+        justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 
+          border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // Only redirect if we are SURE the user is authenticated
+  // (loading must be false before we check isAuthenticated)
+  if (!loading && isAuthenticated) {
+    if (isAdmin) return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleGoogleLogin = () => {
-    login();
+    loginWithGoogle();
   };
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // UI only - no backend integration yet
-    setTimeout(() => {
-      setIsLoading(false);
-      // Show a message that this is not connected yet
-      alert('Email/password login is not yet connected to the backend. Please use Google Sign-In for now.');
-    }, 500);
+    const result = await login(email, password);
+    if (result.success) {
+      if (isAdmin) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } else {
+      alert(result.message || 'Invalid email or password');
+    }
+    setIsLoading(false);
   };
 
   return (
@@ -148,8 +166,8 @@ const LoginPage = () => {
               onMouseLeave={() => setIsHovered(false)}
               className="w-full flex items-center justify-center px-6 py-3 bg-white border border-slate-300 rounded-lg text-base font-medium text-slate-700 hover:border-primary-500 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200"
             >
-              <svg 
-                className={`w-5 h-5 mr-3 transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`} 
+              <svg
+                className={`w-5 h-5 mr-3 transition-transform duration-200 ${isHovered ? 'scale-110' : ''}`}
                 viewBox="0 0 24 24"
               >
                 <path

@@ -1,15 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import { useAuthContext } from '../../context/AuthContext';
+import axios from '../../api/axios';
 
 const ProfilePage = () => {
+  const { user } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: 'Inupama',
+    firstName: '',
     lastName: '',
-    email: 'inupama@example.com',
+    email: '',
     role: 'USER'
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        role: user.role || 'USER'
+      });
+    }
+  }, [user]);
 
   const getInitials = (firstName, lastName) => {
     const first = firstName?.charAt(0).toUpperCase() || '';
@@ -19,21 +36,48 @@ const ProfilePage = () => {
 
   const handleEdit = () => {
     setIsEditing(true);
+    setError(null);
+    setSuccess(null);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setFormData({
-      firstName: 'Inupama',
-      lastName: '',
-      email: 'inupama@example.com',
-      role: 'USER'
-    });
+    setError(null);
+    setSuccess(null);
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        role: user.role || 'USER'
+      });
+    }
   };
 
-  const handleSave = () => {
-    // TODO: Call API to save profile
-    setIsEditing(false);
+  const handleSave = async () => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await axios.put('/api/user/profile', {
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
+
+      if (response.data.success) {
+        setSuccess('Profile updated successfully');
+        setIsEditing(false);
+        // Refresh user data
+        window.location.reload();
+      } else {
+        setError(response.data.message || 'Failed to update profile');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -47,6 +91,20 @@ const ProfilePage = () => {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Page Title */}
       <h1 className="text-2xl font-bold text-slate-900 mb-6">My Profile</h1>
+
+      {/* Success Message */}
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-green-800">{success}</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
 
       {/* Profile Info Card */}
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
@@ -96,6 +154,7 @@ const ProfilePage = () => {
                 onChange={handleChange}
                 placeholder="Enter email"
                 className="sm:col-span-2"
+                disabled
               />
             </>
           ) : (
@@ -124,8 +183,10 @@ const ProfilePage = () => {
       {/* Action Buttons */}
       {isEditing ? (
         <div className="flex gap-3">
-          <Button onClick={handleSave}>Save Changes</Button>
-          <Button variant="secondary" onClick={handleCancel}>Cancel</Button>
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </Button>
+          <Button variant="secondary" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
         </div>
       ) : (
         <Button onClick={handleEdit}>Edit Profile</Button>
