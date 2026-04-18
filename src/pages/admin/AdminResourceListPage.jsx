@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ResourceTable from '../../components/resources/ResourceTable';
-import { getAllResources } from '../../api/resourceApi';
+import { getAllResources, deleteResource } from '../../api/resourceApi';
 
 const RESOURCE_TYPES = [
   'LECTURE_HALL',
@@ -14,7 +15,8 @@ const RESOURCE_STATUSES = [
   'OUT_OF_SERVICE'
 ];
 
-const ResourceListPage = () => {
+const AdminResourceListPage = () => {
+  const navigate = useNavigate();
   const [resources, setResources] = useState([]);
   const [filteredResources, setFilteredResources] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,16 +25,13 @@ const ResourceListPage = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // User view - always false for admin features
-  const isAdmin = false;
-
   // Safe data loading with proper error handling
   const loadResources = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Get resources from backend API
+      // Get resources from API
       const data = await getAllResources();
       
       // Ensure we always have an array
@@ -81,6 +80,39 @@ const ResourceListPage = () => {
     setFilteredResources(filtered);
   };
 
+  // Handle edit navigation
+  const handleEdit = (resource) => {
+    if (resource && resource.id) {
+      navigate(`/admin/resources/edit/${resource.id}`);
+    } else {
+      setError('Invalid resource selected');
+    }
+  };
+
+  // Handle delete with confirmation and error handling
+  const handleDelete = async (resource) => {
+    if (!resource || !resource.id) {
+      setError('Invalid resource selected');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to delete "${resource.name || 'this resource'}"?`;
+    if (window.confirm(confirmMessage)) {
+      try {
+        await deleteResource(resource.id);
+        // Reload resources to show updated list
+        loadResources();
+      } catch (err) {
+        console.error('Error deleting resource:', err);
+        const errorMessage = err.response?.data?.message 
+          || err.response?.data?.error 
+          || err.message 
+          || 'Failed to delete resource';
+        setError(`Error: ${errorMessage}`);
+      }
+    }
+  };
+
   // Clear all filters
   const clearFilters = () => {
     setSearchQuery('');
@@ -89,8 +121,9 @@ const ResourceListPage = () => {
     setFilteredResources(resources);
   };
 
-  // Filter resources by type and status (search is handled by client-side filtering)
-  const displayResources = filteredResources.filter(resource => {
+  // Apply type and status filters to filtered resources
+  const displayResources = (filteredResources || []).filter(resource => {
+    if (!resource) return false;
     const matchesType = !typeFilter || resource.type === typeFilter;
     const matchesStatus = !statusFilter || resource.status === statusFilter;
     return matchesType && matchesStatus;
@@ -179,18 +212,6 @@ const ResourceListPage = () => {
                     Clear
                   </button>
                 )}
-                {/* Refresh Button */}
-                <button
-                  onClick={loadResources}
-                  disabled={loading}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm font-medium inline-flex items-center gap-2"
-                  title="Refresh data"
-                >
-                  <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Refresh
-                </button>
               </div>
 
               {/* Type Filter */}
@@ -224,6 +245,16 @@ const ResourceListPage = () => {
               </select>
             </div>
 
+            {/* Create Button - Always visible for admin */}
+            <button
+              onClick={() => navigate('/admin/resources/create')}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium inline-flex items-center gap-2 transition-all hover:shadow-md"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Create Resource
+            </button>
           </div>
         </div>
 
@@ -239,19 +270,19 @@ const ResourceListPage = () => {
           </div>
         )}
 
-        {/* Resources Table - Available for all users */}
+        {/* Resources Table */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 className="text-xl font-semibold text-gray-900">
-              Resources ({displayResources.length})
+              Resources ({filteredResources.length})
             </h2>
           </div>
           <ResourceTable
             resources={displayResources}
-            onEdit={null}
-            onDelete={null}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
             loading={loading}
-            isAdmin={false}
+            isAdmin={true}
           />
         </div>
       </div>
@@ -259,4 +290,4 @@ const ResourceListPage = () => {
   );
 };
 
-export default ResourceListPage;
+export default AdminResourceListPage;

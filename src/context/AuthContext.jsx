@@ -1,55 +1,144 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from '../api/axios';
+import { authApi } from '../api/authApi';
 
 const AuthContext = createContext();
 
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
-  }
+  if (!context) throw new Error(
+    'useAuthContext must be used within AuthProvider'
+  );
   return context;
 };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false); // TODO: set back to true when backend is connected
+  const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // TODO: Uncomment this when backend is connected
-  // useEffect(() => {
-  //   const fetchCurrentUser = async () => {
-  //     try {
-  //       const currentUser = await authApi.getCurrentUser();
-  //       setUser(currentUser);
-  //       setIsAuthenticated(true);
-  //     } catch (error) {
-  //       setUser(null);
-  //       setIsAuthenticated(false);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchCurrentUser();
-  // }, []);
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await axios.get('/api/me', { 
+          withCredentials: true 
+        });
+        console.log('/api/me response:', response.data);
+        setUser(response.data);
+        setIsAuthenticated(true);
+        console.log('User is authenticated');
+      } catch (error) {
+        // Not logged in — this is expected for unauthenticated users
+        console.log('/api/me failed:', error);
+        setUser(null);
+        setIsAuthenticated(false);
+        console.log('User is NOT authenticated');
+      } finally {
+        setLoading(false);
+        console.log('Auth check complete, loading = false');
+      }
+    };
+    checkAuth();
+  }, []);
 
-  const login = () => {
-    console.log('Login - backend not connected yet');
+  const login = async (email, password) => {
+    try {
+      const data = await authApi.login(email, password);
+      if (data.success) {
+        // Fetch fresh user data from /api/me
+        const currentUser = await authApi.getCurrentUser();
+        setUser(currentUser);
+        setIsAuthenticated(true);
+        return { success: true };
+      } else {
+        return { success: false, message: data.message };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Invalid email or password'
+      };
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
+  const loginWithGoogle = () => {
+    authApi.loginWithGoogle();
   };
+
+  const signup = async (firstName, lastName, email,
+                        password, role) => {
+    try {
+      const data = await authApi.signup(
+        firstName, lastName, email, password, role
+      );
+      console.log('Signup response:', data);
+      return data;
+    } catch (error) {
+      console.error('Signup error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Signup failed. Please try again.'
+      };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // Call logout as an API request, NOT a browser navigation
+      // Use fetch directly to avoid any axios interceptor issues
+      await fetch('http://localhost:8080/api/logout', {
+        method: 'POST',
+        credentials: 'include', // sends the session cookie
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear all auth state
+      setUser(null);
+      setIsAuthenticated(false);
+      // Force full page reload to reset React state
+      // and ensure /api/me returns 401
+      window.location.replace('/login');
+    }
+  };
+
+  const userRole = user?.role || user?.roles?.[0]?.name || null;
 
   const value = {
     user,
     loading,
     isAuthenticated,
     login,
+    loginWithGoogle,
+    signup,
     logout,
-    isAdmin: user?.role === 'ADMIN',
-    isUser: user?.role === 'USER'
+    userRole,
+    isStudent: userRole === 'STUDENT',
+    isAcademicStaff: userRole === 'ACADEMIC_STAFF',
+    isTechnician: userRole === 'TECHNICIAN',
+    isAdmin: userRole === 'ADMIN',
+    isUser: userRole === 'USER',
+    canManageResources: userRole === 'ADMIN',
+    canApproveBookings: userRole === 'ADMIN',
+    canManageTickets: 
+      userRole === 'ADMIN' || userRole === 'TECHNICIAN',
   };
+
+  // Block ALL rendering until auth check is complete
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center 
+        justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 
+            border-b-2 border-indigo-600"></div>
+          <p className="text-slate-500 text-sm">
+            Checking authentication...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={value}>
