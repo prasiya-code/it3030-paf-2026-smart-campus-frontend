@@ -15,7 +15,10 @@ import Dashboard from "../pages/user/Dashboard";
 import Tickets from "../pages/user/Tickets";
 import ProfilePage from "../pages/user/ProfilePage";
 import ResourceListPage from "../pages/resources/ResourceListPage";
+import ResourceCreatePage from "../pages/resources/ResourceCreatePage";
+import ResourceEditPage from "../pages/resources/ResourceEditPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import AdminResourceListPage from "../pages/admin/AdminResourceListPage";
 import AdminNotificationsPage from "../pages/admin/AdminNotificationsPage";
 import AdminProfilePage from "../pages/admin/AdminProfilePage";
 import UserManagementPage from "../pages/admin/UserManagementPage";
@@ -57,6 +60,9 @@ function AppRoutes() {
         >
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/users" element={<UserManagementPage />} />
+          <Route path="/admin/resources" element={<AdminResourceListPage />} />
+          <Route path="/admin/resources/create" element={<ResourceCreatePage />} />
+          <Route path="/admin/resources/edit/:id" element={<ResourceEditPage />} />
           <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
           <Route path="/admin/profile" element={<AdminProfilePage />} />
         </Route>
