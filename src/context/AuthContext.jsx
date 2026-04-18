@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         const response = await axios.get('/api/me', { 
-          withCredentials: true 
+          withCredentials: true
         });
         console.log('/api/me response:', response.data);
         setUser(response.data);
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signup = async (firstName, lastName, email,
-                        password, role) => {
+                        password, role = 'USER') => {
     try {
       const data = await authApi.signup(
         firstName, lastName, email, password, role
@@ -104,6 +104,33 @@ export const AuthProvider = ({ children }) => {
 
   const userRole = user?.role || user?.roles?.[0]?.name || null;
 
+  // Module A - Facilities & Assets Catalogue
+  const canViewResources = true; // All authenticated users can view
+  const canManageResources = userRole === 'ADMIN'; // Only admin can create/edit/delete
+
+  // Module B - Booking Management
+  const canCreateBookings = true; // All authenticated users can create
+  const canViewOwnBookings = true; // All authenticated users can view own
+  const canCancelOwnBookings = true; // All authenticated users can cancel own
+  const canViewAllBookings = userRole === 'ADMIN'; // Only admin can view all
+  const canApproveBookings = userRole === 'ADMIN'; // Only admin can approve/reject
+
+  // Module C - Maintenance & Incident Ticketing
+  const canCreateTickets = true; // All authenticated users can create
+  const canViewOwnTickets = true; // All authenticated users can view own
+  const canViewAssignedTickets = userRole === 'TECHNICIAN'; // Technicians can view assigned
+  const canViewAllTickets = userRole === 'ADMIN'; // Only admin can view all
+  const canAssignTickets = userRole === 'ADMIN'; // Only admin can assign
+  const canUpdateTicketStatus = userRole === 'ADMIN' || userRole === 'TECHNICIAN'; // Admin and technician can update
+  const canRejectTickets = userRole === 'ADMIN'; // Only admin can reject
+  const canAddResolutionNotes = userRole === 'ADMIN' || userRole === 'TECHNICIAN'; // Admin and technician can add notes
+  const canEditAnyComments = userRole === 'ADMIN'; // Only admin can edit any comments
+  const canDeleteAnyComments = userRole === 'ADMIN'; // Only admin can delete any comments
+
+  // Module D - Notifications
+  const canViewNotifications = true; // All authenticated users can view
+  const canMarkNotificationsRead = true; // All authenticated users can mark as read
+
   const value = {
     user,
     loading,
@@ -118,10 +145,29 @@ export const AuthProvider = ({ children }) => {
     isTechnician: userRole === 'TECHNICIAN',
     isAdmin: userRole === 'ADMIN',
     isUser: userRole === 'USER',
-    canManageResources: userRole === 'ADMIN',
-    canApproveBookings: userRole === 'ADMIN',
-    canManageTickets: 
-      userRole === 'ADMIN' || userRole === 'TECHNICIAN',
+    // Module A - Resources
+    canViewResources,
+    canManageResources,
+    // Module B - Bookings
+    canCreateBookings,
+    canViewOwnBookings,
+    canCancelOwnBookings,
+    canViewAllBookings,
+    canApproveBookings,
+    // Module C - Tickets
+    canCreateTickets,
+    canViewOwnTickets,
+    canViewAssignedTickets,
+    canViewAllTickets,
+    canAssignTickets,
+    canUpdateTicketStatus,
+    canRejectTickets,
+    canAddResolutionNotes,
+    canEditAnyComments,
+    canDeleteAnyComments,
+    // Module D - Notifications
+    canViewNotifications,
+    canMarkNotificationsRead,
   };
 
   // Block ALL rendering until auth check is complete
