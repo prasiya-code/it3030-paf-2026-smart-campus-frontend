@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ResourceTable from '../../components/resources/ResourceTable';
-import { getAllResources, searchResources } from '../../api/resourceApi';
+import { getAllResources, deleteResource, searchResources } from '../../api/resourceApi';
 
 const RESOURCE_TYPES = [
   'LECTURE_HALL',
@@ -14,16 +15,14 @@ const RESOURCE_STATUSES = [
   'OUT_OF_SERVICE'
 ];
 
-const ResourceListPage = () => {
+const AdminResourceListPage = () => {
+  const navigate = useNavigate();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-
-  // User view - always false for admin features
-  const isAdmin = false;
 
   // Safe data loading with proper error handling
   const loadResources = async () => {
@@ -79,6 +78,35 @@ const ResourceListPage = () => {
       setResources([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle edit navigation
+  const handleEdit = (resource) => {
+    if (resource && resource.id) {
+      navigate(`/admin/resources/edit/${resource.id}`);
+    } else {
+      setError('Invalid resource selected');
+    }
+  };
+
+  // Handle delete with confirmation and error handling
+  const handleDelete = async (resource) => {
+    if (!resource || !resource.id) {
+      setError('Invalid resource selected');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to delete "${resource.name || 'this resource'}"?`;
+    if (window.confirm(confirmMessage)) {
+      try {
+        await deleteResource(resource.id);
+        // Reload resources to show updated list
+        loadResources();
+      } catch (err) {
+        console.error('Error deleting resource:', err);
+        setError('Failed to delete resource. Please try again.');
+      }
     }
   };
 
@@ -201,6 +229,16 @@ const ResourceListPage = () => {
               </select>
             </div>
 
+            {/* Create Button - Always visible for admin */}
+            <button
+              onClick={() => navigate('/admin/resources/create')}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium inline-flex items-center gap-2 transition-all hover:shadow-md"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Create Resource
+            </button>
           </div>
         </div>
 
@@ -216,7 +254,7 @@ const ResourceListPage = () => {
           </div>
         )}
 
-        {/* Resources Table - Available for all users */}
+        {/* Resources Table */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -225,10 +263,10 @@ const ResourceListPage = () => {
           </div>
           <ResourceTable
             resources={filteredResources}
-            onEdit={null}
-            onDelete={null}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
             loading={loading}
-            isAdmin={false}
+            isAdmin={true}
           />
         </div>
       </div>
@@ -236,4 +274,4 @@ const ResourceListPage = () => {
   );
 };
 
-export default ResourceListPage;
+export default AdminResourceListPage;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ResourceForm from '../../components/resources/ResourceForm';
 import { createResource } from '../../api/resourceApi';
@@ -7,20 +7,6 @@ const ResourceCreatePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Role detection - defaults to 'user' for production safety
-  // In production, role would come from backend auth
-  const [isAdmin, setIsAdmin] = useState(() => {
-    const storedRole = localStorage.getItem('userRole');
-    return (storedRole || 'user') === 'admin';
-  });
-
-  // Redirect if not admin
-  useEffect(() => {
-    if (!isAdmin) {
-      navigate('/resources', { replace: true });
-    }
-  }, [isAdmin, navigate]);
 
   const handleSubmit = async (formData) => {
     try {
@@ -33,7 +19,7 @@ const ResourceCreatePage = () => {
       };
       
       await createResource(resourceData);
-      navigate('/resources');
+      navigate('/admin/resources');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create resource. Please try again.');
       console.error('Error creating resource:', err);
@@ -41,11 +27,6 @@ const ResourceCreatePage = () => {
       setLoading(false);
     }
   };
-
-  // Don't render form if not admin
-  if (!isAdmin) {
-    return null; // Will redirect via useEffect
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
