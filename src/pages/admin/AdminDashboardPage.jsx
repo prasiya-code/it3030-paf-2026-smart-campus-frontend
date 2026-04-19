@@ -1,19 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminSectionTitle from '../../components/admin/AdminSectionTitle';
-import AdminStatCard from '../../components/admin/AdminStatCard';
 import AdminQuickActions from '../../components/admin/AdminQuickActions';
-import AdminActivityFeed from '../../components/admin/AdminActivityFeed';
+import AdminAnalyticsCards from '../../components/admin/AdminAnalyticsCards';
+import AdminTopResources from '../../components/admin/AdminTopResources';
+import AdminPeakBookingHours from '../../components/admin/AdminPeakBookingHours';
+import AdminRecentActivity from '../../components/admin/AdminRecentActivity';
+import { analyticsApi } from '../../api/analyticsApi';
 import {
-  adminStats,
-  activityFeed,
   quickActions
 } from '../../mocks/adminDashboardMock';
 
 const AdminDashboardPage = () => {
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      const data = await analyticsApi.getDashboardAnalytics();
+      setAnalytics(data);
+    } catch (err) {
+      setError('Failed to load analytics data');
+      console.error('Error fetching analytics:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getCurrentDate = () => {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return new Date().toLocaleDateString('en-US', options);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+        <p className="text-gray-500">Loading analytics...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -26,37 +64,16 @@ const AdminDashboardPage = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats Overview Section */}
+        {/* Analytics Cards Section */}
         <AdminSectionTitle title="Overview" subtitle="Key metrics at a glance" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <AdminStatCard
-            title="Total Resources"
-            value={adminStats.totalResources}
-            change={`${adminStats.activeResources} active`}
-            icon="📦"
-            color="blue"
-          />
-          <AdminStatCard
-            title="Pending Bookings"
-            value={adminStats.pendingBookings}
-            change="Needs review"
-            icon="📅"
-            color="orange"
-          />
-          <AdminStatCard
-            title="Open Tickets"
-            value={adminStats.openTickets}
-            change={`${adminStats.inProgressTickets} in progress`}
-            icon="🎫"
-            color="red"
-          />
-          <AdminStatCard
-            title="Unread Notifications"
-            value={adminStats.unreadNotifications}
-            change="New alerts"
-            icon="🔔"
-            color="purple"
-          />
+        <div className="mb-8">
+          <AdminAnalyticsCards analytics={analytics} />
+        </div>
+
+        {/* Top Resources and Peak Hours */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <AdminTopResources topResources={analytics?.topResources} />
+          <AdminPeakBookingHours peakBookingHours={analytics?.peakBookingHours} />
         </div>
 
         {/* Quick Actions Section */}
@@ -65,10 +82,10 @@ const AdminDashboardPage = () => {
           <AdminQuickActions actions={quickActions} />
         </div>
 
-        {/* Activity Feed Section */}
+        {/* Recent Activity Section */}
         <AdminSectionTitle title="Recent Activity" subtitle="System-wide updates" />
         <div className="mb-8">
-          <AdminActivityFeed activities={activityFeed} />
+          <AdminRecentActivity recentActivity={analytics?.recentActivity} />
         </div>
       </div>
     </div>
