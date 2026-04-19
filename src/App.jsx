@@ -1,5 +1,12 @@
+import { AuthProvider } from './context/AuthContext';
+import AppRoutes from './routes/AppRoutes';
+
 function App() {
-  return <h1>Smart Campus Frontend</h1>;
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
 }
 
 export default App;

@@ -1,8 +1,21 @@
-import axios from "axios";
+import axios from 'axios';
 
-const api = axios.create({
-  baseURL: "http://localhost:8080",
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:8080',
   withCredentials: true,
 });
 
-export default api;
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Only redirect if not already on login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default axiosInstance;
