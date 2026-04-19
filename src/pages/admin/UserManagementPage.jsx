@@ -43,7 +43,10 @@ const UserManagementPage = () => {
       setUserList(users);
     } catch (err) {
       console.error('Error loading users:', err);
-      setError('Failed to load users');
+      const errorMessage = err.response 
+        ? `API Error ${err.response.status}: ${err.response.data?.message || err.message}` 
+        : `Network Error: ${err.message}`;
+      setError(`Failed to load users (${errorMessage})`);
     } finally {
       setIsLoading(false);
     }
@@ -226,6 +229,12 @@ const UserManagementPage = () => {
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
                     Loading users...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-red-500 font-medium">
+                    {error} (Check if your account has the exact 'ADMIN' role in the database)
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
