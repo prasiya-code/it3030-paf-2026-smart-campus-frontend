@@ -46,6 +46,7 @@ const TicketDetails = () => {
       case 'Open': return 'bg-red-100 text-red-700';
       case 'In Progress': return 'bg-blue-100 text-blue-700';
       case 'Resolved': return 'bg-green-100 text-green-700';
+      case 'REJECTED': return 'bg-gray-100 text-gray-700 border border-gray-300';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -139,6 +140,13 @@ const TicketDetails = () => {
       )}
 
       <div className="bg-white rounded-xl shadow-sm p-6">
+        {ticket.status === 'REJECTED' && ticket.rejectionReason && (
+          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+            <h3 className="text-red-800 font-bold mb-1">Rejection Reason:</h3>
+            <p className="text-red-700 whitespace-pre-wrap">{ticket.rejectionReason}</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Ticket Code</label>
@@ -181,15 +189,6 @@ const TicketDetails = () => {
           <label className="block text-sm font-medium text-gray-600 mb-2">Description</label>
           <p className="text-gray-900 whitespace-pre-wrap">{ticket.description || '-'}</p>
         </div>
-
-        {ticket.status === 'REJECTED' && ticket.rejectionReason && (
-          <div className="border-t border-gray-200 pt-6 mb-6">
-            <h3 className="text-lg font-semibold text-red-700 mb-2">Rejection Reason</h3>
-            <div className="bg-red-50 p-4 rounded-lg border border-red-100">
-              <p className="text-red-900 whitespace-pre-wrap">{ticket.rejectionReason}</p>
-            </div>
-          </div>
-        )}
 
         {ticket.attachments && ticket.attachments.length > 0 && (
           <div className="border-t border-gray-200 pt-6 mb-6">

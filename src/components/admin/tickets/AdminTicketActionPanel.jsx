@@ -10,6 +10,7 @@ const AdminTicketActionPanel = ({ ticket, onTicketUpdate }) => {
   const [technicians, setTechnicians] = useState([{ value: '', label: 'Select technician' }]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
 
   useEffect(() => {
     // Set initial values from ticket
@@ -66,8 +67,7 @@ const AdminTicketActionPanel = ({ ticket, onTicketUpdate }) => {
     try {
       await updateTicket(ticket.id, {
         status: selectedStatus,
-        resolutionNotes: resolutionNotes || undefined,
-        rejectionReason: rejectionReason || undefined
+        resolutionNotes: resolutionNotes || undefined
       });
       if (onTicketUpdate) onTicketUpdate();
     } catch (err) {
@@ -79,24 +79,14 @@ const AdminTicketActionPanel = ({ ticket, onTicketUpdate }) => {
   };
 
   const handleReject = async () => {
-    const isConfirmed = window.confirm('Are you sure you want to reject this ticket?');
-    if (!isConfirmed) return;
-
-    const reason = window.prompt('Please provide a reason for rejecting this ticket:');
-    if (reason === null) return; // User cancelled the prompt
-    
-    if (reason.trim() === '') {
-      window.alert('Rejection reason is required to reject a ticket.');
-      return;
-    }
-
     setIsUpdating(true);
     setError('');
     try {
       await updateTicket(ticket.id, {
         status: 'REJECTED',
-        rejectionReason: reason.trim()
+        rejectionReason: rejectionReason
       });
+      setShowRejectModal(false);
       if (onTicketUpdate) onTicketUpdate();
     } catch (err) {
       setError('Failed to reject ticket.');
@@ -178,20 +168,63 @@ const AdminTicketActionPanel = ({ ticket, onTicketUpdate }) => {
         />
       </div>
 
-      <div className="border-t border-gray-200 my-6" />
-
       {/* Reject Ticket Section */}
-      <div>
-        <h3 className="text-sm font-medium text-red-700 mb-3">Reject Ticket</h3>
-        <p className="text-sm text-gray-500 mb-3">Rejecting a ticket will close it and notify the user. You must provide a reason.</p>
+      <div className="mt-4">
         <button
-          onClick={handleReject}
+          onClick={() => setShowRejectModal(true)}
           className="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={isUpdating}
         >
-          {isUpdating ? 'Processing...' : 'Reject Ticket'}
+          Reject Ticket
         </button>
       </div>
+
+      {showRejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Reject Ticket</h3>
+              <p className="text-sm text-red-600 mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
+                Are you sure you want to reject this ticket? This action cannot be undone.
+              </p>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rejection Reason <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Enter the reason for rejecting this ticket..."
+                  rows="4"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason(''); // Reset reason on cancel
+                }}
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                disabled={isUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReject}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                disabled={!rejectionReason.trim() || isUpdating}
+              >
+                {isUpdating ? 'Rejecting...' : 'Confirm Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
