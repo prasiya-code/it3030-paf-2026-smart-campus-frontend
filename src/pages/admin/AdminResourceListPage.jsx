@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ResourceTable from '../../components/resources/ResourceTable';
+import TimeTravelSimulator from '../../components/resources/TimeTravelSimulator';
 import { getAllResources, deleteResource } from '../../api/resourceApi';
 
 const RESOURCE_TYPES = [
@@ -24,6 +25,7 @@ const AdminResourceListPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [simulatedTime, setSimulatedTime] = useState(null); // Time Travel Simulator
 
   // Safe data loading with proper error handling
   const loadResources = async () => {
@@ -121,6 +123,11 @@ const AdminResourceListPage = () => {
     setFilteredResources(resources);
   };
 
+  // Handle time change from Time Travel Simulator
+  const handleTimeChange = (time) => {
+    setSimulatedTime(time);
+  };
+
   // Apply type and status filters to filtered resources
   const displayResources = (filteredResources || []).filter(resource => {
     if (!resource) return false;
@@ -155,6 +162,12 @@ const AdminResourceListPage = () => {
             Manage campus resources including lecture halls, labs, and equipment
           </p>
         </div>
+
+        {/* Time Travel Simulator */}
+        <TimeTravelSimulator 
+          onTimeChange={handleTimeChange}
+          initialTime="08:00"
+        />
 
         {/* Action Bar */}
         <div className="bg-white rounded-xl shadow-md p-6 mb-6">
@@ -283,6 +296,7 @@ const AdminResourceListPage = () => {
             onDelete={handleDelete}
             loading={loading}
             isAdmin={true}
+            simulatedTime={simulatedTime}
           />
         </div>
       </div>
