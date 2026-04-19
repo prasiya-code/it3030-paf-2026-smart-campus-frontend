@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { notificationApi } from '../../api/notificationApi';
+import NotificationPreferences from '../../components/notifications/NotificationPreferences';
 
 const getTypeStyle = (type) => {
   const styles = {
@@ -56,10 +57,28 @@ const NotificationsPage = () => {
   const [filter, setFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [preferences, setPreferences] = useState({});
 
   useEffect(() => {
     loadNotifications();
+    loadPreferences();
   }, []);
+
+  const loadPreferences = () => {
+    const saved = localStorage.getItem('notificationPreferences');
+    if (saved) {
+      setPreferences(JSON.parse(saved));
+    } else {
+      // Default: all enabled
+      const defaults = {};
+      const categories = ['BOOKING_APPROVED', 'BOOKING_REJECTED', 'BOOKING_CANCELLED', 'TICKET_STATUS_CHANGED', 'TICKET_COMMENT_ADDED', 'TICKET_ASSIGNED'];
+      categories.forEach(cat => {
+        defaults[cat] = true;
+      });
+      setPreferences(defaults);
+    }
+  };
 
   const loadNotifications = async () => {
     try {
@@ -99,9 +118,18 @@ const NotificationsPage = () => {
     }
   };
 
+  const handleSavePreferences = (newPreferences) => {
+    setPreferences(newPreferences);
+  };
+
   const filteredNotifications = notifications.filter(n => {
-    if (filter === 'unread') return !n.isRead;
-    if (filter === 'read') return n.isRead;
+    // Apply read/unread filter
+    if (filter === 'unread' && n.isRead) return false;
+    if (filter === 'read' && !n.isRead) return false;
+
+    // Apply preference-based category filter
+    if (preferences[n.type] === false) return false;
+
     return true;
   });
 
@@ -114,14 +142,22 @@ const NotificationsPage = () => {
             Notifications {unreadCount > 0 && <span className="text-slate-500 font-normal">({unreadCount} unread)</span>}
           </h1>
         </div>
-        {!isLoading && notifications.length > 0 && (
+        <div className="flex gap-2">
           <button
-            onClick={handleMarkAllAsRead}
+            onClick={() => setShowPreferences(true)}
             className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            Mark All as Read
+            ⚙️ Preferences
           </button>
-        )}
+          {!isLoading && notifications.length > 0 && (
+            <button
+              onClick={handleMarkAllAsRead}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Mark All as Read
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Error State */}
@@ -223,6 +259,13 @@ const NotificationsPage = () => {
           </div>
         </>
       )}
+
+      {/* Notification Preferences Modal */}
+      <NotificationPreferences
+        isOpen={showPreferences}
+        onClose={() => setShowPreferences(false)}
+        onSave={handleSavePreferences}
+      />
     </div>
   );
 };
