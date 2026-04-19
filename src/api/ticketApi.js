@@ -9,10 +9,31 @@ export const getMyTickets = async () => {
   }
 };
 
+export const getAllTickets = async (filters = {}) => {
+  try {
+    const queryParams = new URLSearchParams(filters).toString();
+    const url = queryParams ? `/api/tickets?${queryParams}` : '/api/tickets';
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
 export const getTicketById = async (id) => {
   try {
     const response = await api.get(`/api/tickets/${id}`);
-    return response.data;
+    const ticket = response.data;
+    
+    try {
+      const attachmentsRes = await api.get(`/api/attachments/ticket/${id}`);
+      ticket.attachments = attachmentsRes.data || [];
+    } catch (attachErr) {
+      console.warn('Could not fetch attachments:', attachErr);
+      ticket.attachments = ticket.attachments || [];
+    }
+
+    return ticket;
   } catch (error) {
     throw error.response?.data || error.message;
   }

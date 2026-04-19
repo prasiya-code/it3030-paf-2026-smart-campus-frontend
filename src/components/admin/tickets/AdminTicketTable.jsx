@@ -1,79 +1,59 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const AdminTicketTable = () => {
-  const sampleTickets = [
-    {
-      id: 1,
-      ticketCode: 'TKT-001',
-      category: 'MAINTENANCE',
-      priority: 'HIGH',
-      status: 'Open',
-      createdBy: 'Alice Johnson',
-      assignedTo: 'Unassigned',
-      createdAt: '2024-01-15T10:30:00',
-    },
-    {
-      id: 2,
-      ticketCode: 'TKT-002',
-      category: 'INCIDENT',
-      priority: 'URGENT',
-      status: 'In Progress',
-      createdBy: 'Bob Smith',
-      assignedTo: 'John Smith',
-      createdAt: '2024-01-14T14:20:00',
-    },
-    {
-      id: 3,
-      ticketCode: 'TKT-003',
-      category: 'REPAIR',
-      priority: 'MEDIUM',
-      status: 'Resolved',
-      createdBy: 'Carol White',
-      assignedTo: 'Sarah Johnson',
-      createdAt: '2024-01-13T09:15:00',
-    },
-    {
-      id: 4,
-      ticketCode: 'TKT-004',
-      category: 'CLEANING',
-      priority: 'LOW',
-      status: 'Open',
-      createdBy: 'David Brown',
-      assignedTo: 'Unassigned',
-      createdAt: '2024-01-12T16:45:00',
-    },
-    {
-      id: 5,
-      ticketCode: 'TKT-005',
-      category: 'OTHER',
-      priority: 'MEDIUM',
-      status: 'Rejected',
-      createdBy: 'Emma Davis',
-      assignedTo: 'Mike Wilson',
-      createdAt: '2024-01-11T11:00:00',
-    },
-  ];
+const AdminTicketTable = ({ tickets = [], loading = false }) => {
+  const formatUser = (user) => {
+    if (!user) return 'Unassigned';
+    if (typeof user === 'string') return user;
+    if (user.firstName) return `${user.firstName} ${user.lastName || ''}`.trim();
+    if (user.name) return user.name;
+    return 'Unknown';
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Open': return 'bg-red-100 text-red-700';
-      case 'In Progress': return 'bg-blue-100 text-blue-700';
-      case 'Resolved': return 'bg-green-100 text-green-700';
-      case 'Rejected': return 'bg-gray-100 text-gray-700';
+      case 'OPEN': return 'bg-sky-100 text-sky-700';
+      case 'IN_PROGRESS': return 'bg-amber-100 text-amber-700';
+      case 'RESOLVED': return 'bg-green-100 text-green-700';
+      case 'CLOSED': return 'bg-gray-100 text-gray-700 border border-gray-300';
+      case 'REJECTED': return 'bg-red-100 text-red-700 border border-red-200';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'Urgent': return 'bg-red-100 text-red-700';
-      case 'High': return 'bg-orange-100 text-orange-700';
-      case 'Medium': return 'bg-yellow-100 text-yellow-700';
-      case 'Low': return 'bg-green-100 text-green-700';
+      case 'URGENT': return 'bg-red-100 text-red-700 border border-red-200';
+      case 'HIGH': return 'bg-orange-100 text-orange-700';
+      case 'MEDIUM': return 'bg-yellow-100 text-yellow-700';
+      case 'LOW': return 'bg-green-100 text-green-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
+
+  const formatEnumText = (text) => {
+    if (!text) return '';
+    return text.charAt(0) + text.slice(1).toLowerCase().replace('_', ' ');
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden p-12 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mb-4"></div>
+        <p className="text-gray-500">Loading tickets...</p>
+      </div>
+    );
+  }
+
+  if (tickets.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden p-12 text-center">
+        <div className="text-4xl mb-3">🎫</div>
+        <h3 className="text-lg font-medium text-gray-900 mb-1">No tickets found</h3>
+        <p className="text-gray-500">There are currently no tickets matching your criteria.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -92,39 +72,40 @@ const AdminTicketTable = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {sampleTickets.map((ticket) => (
-              <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{ticket.ticketCode}</td>
+            {tickets.map((ticket) => (
+              <tr 
+                key={ticket.id} 
+                className={`transition-colors ${
+                  ticket.priority === 'URGENT' 
+                    ? 'bg-red-50 hover:bg-red-100' 
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">{ticket.ticketCode || ticket.id}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">{ticket.category}</td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                    {ticket.priority}
+                    {formatEnumText(ticket.priority)}
                   </span>
                 </td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                    {ticket.status}
+                    {formatEnumText(ticket.status)}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{ticket.createdBy}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{ticket.assignedTo}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">{formatUser(ticket.createdBy)}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">{formatUser(ticket.assignedTo)}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {new Date(ticket.createdAt).toLocaleDateString()}
+                  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-'}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex gap-2">
                     <Link
                       to={`/admin/tickets/${ticket.id}`}
-                      className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                      className="text-primary-600 hover:text-primary-800 font-medium text-sm bg-primary-50 px-3 py-1.5 rounded-lg transition-colors"
                     >
-                      View
+                      Manage Ticket
                     </Link>
-                    <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                      Assign
-                    </button>
-                    <button className="text-green-600 hover:text-green-700 font-medium text-sm">
-                      Update
-                    </button>
                   </div>
                 </td>
               </tr>

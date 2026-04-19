@@ -1,11 +1,16 @@
 import React from 'react';
 
-const TicketStatsCards = () => {
+const TicketStatsCards = ({ tickets = [] }) => {
+  const total = tickets.length;
+  const open = tickets.filter(t => t.status === 'OPEN').length;
+  const inProgress = tickets.filter(t => t.status === 'IN_PROGRESS').length;
+  const resolved = tickets.filter(t => t.status === 'RESOLVED').length;
+
   const stats = [
-    { title: 'Total Tickets', value: '24', icon: '🎫', color: 'bg-blue-100 text-blue-700' },
-    { title: 'Open Tickets', value: '8', icon: '🔓', color: 'bg-red-100 text-red-700' },
-    { title: 'In Progress', value: '6', icon: '⏳', color: 'bg-yellow-100 text-yellow-700' },
-    { title: 'Resolved', value: '10', icon: '✅', color: 'bg-green-100 text-green-700' },
+    { title: 'Total Tickets', value: total, icon: '🎫', color: 'bg-blue-100 text-blue-700' },
+    { title: 'Open Tickets', value: open, icon: '🔓', color: 'bg-red-100 text-red-700' },
+    { title: 'In Progress', value: inProgress, icon: '⏳', color: 'bg-yellow-100 text-yellow-700' },
+    { title: 'Resolved', value: resolved, icon: '✅', color: 'bg-green-100 text-green-700' },
   ];
 
   return (

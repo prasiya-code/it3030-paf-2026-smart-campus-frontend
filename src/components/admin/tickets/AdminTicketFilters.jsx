@@ -1,52 +1,90 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { authApi } from '../../../api/authApi';
 
-const AdminTicketFilters = () => {
+const AdminTicketFilters = ({ filters, setFilters }) => {
+  const [technicians, setTechnicians] = useState([]);
+
+  useEffect(() => {
+    const fetchTechnicians = async () => {
+      try {
+        const techs = await authApi.getUsersByRole('TECHNICIAN');
+        setTechnicians(techs);
+      } catch (err) {
+        console.error('Failed to load technicians for filter:', err);
+      }
+    };
+    fetchTechnicians();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleReset = () => {
+    setFilters({
+      search: '',
+      status: '',
+      priority: '',
+      category: '',
+      assignedTo: ''
+    });
+  };
   return (
     <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
       <div className="flex flex-col xl:flex-row gap-4">
         <div className="flex-1">
           <input
             type="text"
+            name="search"
+            value={filters.search}
+            onChange={handleChange}
             placeholder="Search by ticket code, description, or created by..."
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4">
-          <select className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
+          <select name="status" value={filters.status} onChange={handleChange} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
             <option value="">All Status</option>
-            <option value="open">Open</option>
-            <option value="in-progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="rejected">Rejected</option>
+            <option value="OPEN">Open</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="RESOLVED">Resolved</option>
+            <option value="CLOSED">Closed</option>
+            <option value="REJECTED">Rejected</option>
           </select>
 
-          <select className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
+          <select name="priority" value={filters.priority} onChange={handleChange} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
             <option value="">All Priority</option>
-            <option value="urgent">Urgent</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
+            <option value="URGENT">Urgent</option>
+            <option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LOW">Low</option>
           </select>
 
-          <select className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
+          <select name="category" value={filters.category} onChange={handleChange} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
             <option value="">All Category</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="incident">Incident</option>
-            <option value="repair">Repair</option>
-            <option value="cleaning">Cleaning</option>
-            <option value="other">Other</option>
+            <option value="MAINTENANCE">Maintenance</option>
+            <option value="INCIDENT">Incident</option>
+            <option value="REPAIR">Repair</option>
+            <option value="CLEANING">Cleaning</option>
+            <option value="OTHER">Other</option>
           </select>
 
-          <select className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
+          <select name="assignedTo" value={filters.assignedTo} onChange={handleChange} className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
             <option value="">Assigned To</option>
-            <option value="unassigned">Unassigned</option>
-            <option value="tech1">John Smith</option>
-            <option value="tech2">Sarah Johnson</option>
-            <option value="tech3">Mike Wilson</option>
+            <option value="UNASSIGNED">Unassigned</option>
+            {technicians.map(tech => (
+              <option key={tech.id} value={tech.id.toString()}>
+                {tech.firstName} {tech.lastName || ''}
+              </option>
+            ))}
           </select>
 
-          <button className="px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <button 
+            onClick={handleReset}
+            className="px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
             Reset
           </button>
         </div>
