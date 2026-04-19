@@ -4,17 +4,17 @@ const API_BASE_URL = '/api/bookings';
 
 export const getAllBookings = async (params = {}) => {
   try {
-    // Build query string from params (e.g., { resourceId: 1, status: 'APPROVED' })
     const queryString = Object.keys(params)
-      .filter(key => params[key] !== undefined && params[key] !== null)
-      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+      .filter((key) => params[key] !== undefined && params[key] !== null && params[key] !== '')
+      .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
       .join('&');
-    
+
     const url = queryString ? `${API_BASE_URL}?${queryString}` : API_BASE_URL;
-    
+
     const response = await api.get(url, {
-      withCredentials: true
+      withCredentials: true,
     });
+
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('GET ALL BOOKINGS ERROR:', error);
@@ -25,7 +25,7 @@ export const getAllBookings = async (params = {}) => {
 export const getMyBookings = async () => {
   try {
     const response = await api.get(`${API_BASE_URL}/my-bookings`, {
-      withCredentials: true
+      withCredentials: true,
     });
     return response.data || [];
   } catch (error) {
@@ -37,7 +37,7 @@ export const getMyBookings = async () => {
 export const getBookingById = async (id) => {
   try {
     const response = await api.get(`${API_BASE_URL}/${id}`, {
-      withCredentials: true
+      withCredentials: true,
     });
     return response.data;
   } catch (error) {
@@ -49,7 +49,7 @@ export const getBookingById = async (id) => {
 export const createBooking = async (bookingData) => {
   try {
     const response = await api.post(API_BASE_URL, bookingData, {
-      withCredentials: true
+      withCredentials: true,
     });
     return response.data;
   } catch (error) {
@@ -60,8 +60,8 @@ export const createBooking = async (bookingData) => {
 
 export const cancelBooking = async (id) => {
   try {
-    const response = await api.patch(`${API_BASE_URL}/${id}/cancel`, null, {
-      withCredentials: true
+    const response = await api.post(`${API_BASE_URL}/${id}/cancel`, null, {
+      withCredentials: true,
     });
     return response.data;
   } catch (error) {
@@ -72,8 +72,9 @@ export const cancelBooking = async (id) => {
 
 export const updateBooking = async (id, bookingData) => {
   try {
+    // Admin status update only
     const response = await api.put(`${API_BASE_URL}/${id}`, bookingData, {
-      withCredentials: true
+      withCredentials: true,
     });
     return response.data;
   } catch (error) {
@@ -82,13 +83,26 @@ export const updateBooking = async (id, bookingData) => {
   }
 };
 
+export const editMyBooking = async (id, bookingData) => {
+  try {
+    // User edit own pending booking details
+    const response = await api.put(`${API_BASE_URL}/${id}/edit`, bookingData, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('EDIT MY BOOKING ERROR:', error);
+    throw error;
+  }
+};
+
 export const approveBooking = async (id) => {
   try {
-    const response = await api.put(`${API_BASE_URL}/${id}`, {
-      status: 'APPROVED'
-    }, {
-      withCredentials: true
-    });
+    const response = await api.put(
+      `${API_BASE_URL}/${id}`,
+      { status: 'APPROVED' },
+      { withCredentials: true }
+    );
     return response.data;
   } catch (error) {
     console.error('APPROVE BOOKING ERROR:', error);
@@ -98,12 +112,14 @@ export const approveBooking = async (id) => {
 
 export const rejectBooking = async (id, adminReason) => {
   try {
-    const response = await api.put(`${API_BASE_URL}/${id}`, {
-      status: 'REJECTED',
-      adminReason: adminReason || 'Rejected by admin'
-    }, {
-      withCredentials: true
-    });
+    const response = await api.put(
+      `${API_BASE_URL}/${id}`,
+      {
+        status: 'REJECTED',
+        adminReason: adminReason || 'Rejected by admin',
+      },
+      { withCredentials: true }
+    );
     return response.data;
   } catch (error) {
     console.error('REJECT BOOKING ERROR:', error);
@@ -114,7 +130,7 @@ export const rejectBooking = async (id, adminReason) => {
 export const searchBookings = async (query) => {
   try {
     const response = await api.get(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`, {
-      withCredentials: true
+      withCredentials: true,
     });
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
