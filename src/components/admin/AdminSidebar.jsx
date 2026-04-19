@@ -8,12 +8,12 @@ const AdminSidebar = () => {
     <aside className="fixed left-0 top-0 w-64 h-screen bg-slate-900 text-white flex flex-col">
       <div className="p-6 border-b border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+          <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-lg">O</span>
           </div>
           <div>
-            <h1 className="font-bold text-lg">Admin Panel</h1>
-            <p className="text-xs text-slate-400">Management</p>
+            <h1 className="font-bold text-lg text-white">Opsora</h1>
+            <p className="text-xs text-slate-400">Admin Panel</p>
           </div>
         </div>
       </div>

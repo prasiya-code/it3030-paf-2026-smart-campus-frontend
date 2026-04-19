@@ -28,10 +28,16 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  const getInitials = (firstName, lastName) => {
+  const getInitials = (firstName, lastName, email) => {
     const first = firstName?.charAt(0).toUpperCase() || '';
     const last = lastName?.charAt(0).toUpperCase() || '';
-    return first + last || first;
+    if (first && last) return first + last;
+    if (first) return first;
+    if (email) {
+      // Use first character of email as fallback
+      return email.charAt(0).toUpperCase();
+    }
+    return 'U';
   };
 
   const handleEdit = () => {
@@ -111,12 +117,12 @@ const ProfilePage = () => {
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           <div className="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-3xl">
-              {getInitials(formData.firstName, formData.lastName)}
+              {getInitials(formData.firstName, formData.lastName, formData.email)}
             </span>
           </div>
           <div className="flex-1 text-center sm:text-left">
             <h2 className="text-2xl font-bold text-slate-900 mb-1">
-              {formData.firstName} {formData.lastName}
+              {formData.firstName && formData.lastName ? `${formData.firstName} ${formData.lastName}` : formData.firstName || formData.lastName || formData.email || 'User'}
             </h2>
             <p className="text-slate-600 mb-3">{formData.email}</p>
             <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
