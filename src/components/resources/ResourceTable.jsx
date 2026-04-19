@@ -1,11 +1,13 @@
 import React from 'react';
+import { getAvailabilityStatus, formatTimeDisplay } from '../../utils/timeUtils';
 
 const ResourceTable = ({ 
   resources, 
   onEdit, 
   onDelete, 
   loading = false,
-  isAdmin = false 
+  isAdmin = false,
+  simulatedTime = null // Time Travel Simulator: HH:MM format
 }) => {
   if (loading) {
     return (
@@ -49,6 +51,26 @@ const ResourceTable = ({
       : 'bg-red-100 text-red-800 border-red-200';
   };
 
+  // Get availability status for Time Travel Simulator
+  const getAvailabilityBadge = (resource) => {
+    if (!simulatedTime) {
+      return null;
+    }
+    
+    // Use new helper that properly handles OUT_OF_SERVICE status
+    const status = getAvailabilityStatus(resource, simulatedTime);
+    
+    return (
+      <span 
+        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${status.bgColor} ${status.textColor} border ${status.borderColor} transition-all duration-300 animate-fadeIn`}
+        title={status.message}
+      >
+        <span className={`w-2 h-2 rounded-full ${status.dotColor} mr-1.5 animate-pulse`}></span>
+        {status.label}
+      </span>
+    );
+  };
+
   return (
     <div className="overflow-x-auto p-4">
       <table className="w-full border-collapse">
@@ -69,6 +91,11 @@ const ResourceTable = ({
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/8">
               Status
             </th>
+            {simulatedTime && (
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">
+                Availability @ {simulatedTime}
+              </th>
+            )}
             {isAdmin && (
               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6 rounded-tr-lg">
                 Actions
@@ -125,6 +152,17 @@ const ResourceTable = ({
                     {resource.status.replace('_', ' ')}
                   </span>
                 </td>
+                {simulatedTime && (
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {getAvailabilityBadge(resource)}
+                    {/* Show availability hours for reference */}
+                    {resource.status === 'ACTIVE' && resource.availabilityStart && resource.availabilityEnd && (
+                      <div className="text-xs text-gray-400 mt-1">
+                        Hours: {formatTimeDisplay(resource.availabilityStart)} - {formatTimeDisplay(resource.availabilityEnd)}
+                      </div>
+                    )}
+                  </td>
+                )}
                 {isAdmin && (
                   <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                     <button
