@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { updateTicket } from '../../../api/ticketApi';
 import { authApi } from '../../../api/authApi';
 
 const AdminTicketActionPanel = ({ ticket, onTicketUpdate }) => {
+  const navigate = useNavigate();
   const [selectedTechnician, setSelectedTechnician] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [resolutionNotes, setResolutionNotes] = useState('');
@@ -87,7 +89,7 @@ const AdminTicketActionPanel = ({ ticket, onTicketUpdate }) => {
         rejectionReason: rejectionReason
       });
       setShowRejectModal(false);
-      if (onTicketUpdate) onTicketUpdate();
+      navigate('/admin/tickets');
     } catch (err) {
       setError('Failed to reject ticket.');
       console.error(err);
@@ -95,6 +97,39 @@ const AdminTicketActionPanel = ({ ticket, onTicketUpdate }) => {
       setIsUpdating(false);
     }
   };
+
+  if (['REJECTED', 'RESOLVED', 'CLOSED'].includes(ticket?.status)) {
+    const isRejected = ticket.status === 'REJECTED';
+    const bgColor = isRejected ? 'bg-red-50' : 'bg-green-50';
+    const borderColor = isRejected ? 'border-red-200' : 'border-green-200';
+    const titleColor = isRejected ? 'text-red-900' : 'text-green-900';
+    const textColor = isRejected ? 'text-red-700' : 'text-green-800';
+
+    return (
+      <div className={`${bgColor} rounded-xl shadow-sm p-6 border ${borderColor}`}>
+        <h2 className={`text-lg font-semibold ${titleColor} mb-2`}>
+          Ticket {ticket.status.charAt(0) + ticket.status.slice(1).toLowerCase().replace('_', ' ')}
+        </h2>
+        <p className={`${textColor} text-sm mb-4`}>
+          This ticket has been marked as {ticket.status.toLowerCase().replace('_', ' ')} and can no longer be modified or reassigned.
+        </p>
+        
+        {isRejected && (
+          <div className="bg-white rounded p-3 border border-red-100">
+            <p className="text-xs text-red-500 font-bold uppercase mb-1">Rejection Reason</p>
+            <p className="text-gray-800 text-sm whitespace-pre-wrap">{ticket.rejectionReason || 'No reason provided.'}</p>
+          </div>
+        )}
+
+        {!isRejected && ticket.resolutionNotes && (
+          <div className="bg-white rounded p-3 border border-green-100 mt-2">
+            <p className="text-xs text-green-600 font-bold uppercase mb-1">Resolution Notes</p>
+            <p className="text-gray-800 text-sm whitespace-pre-wrap">{ticket.resolutionNotes}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">

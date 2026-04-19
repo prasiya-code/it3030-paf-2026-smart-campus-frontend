@@ -1,12 +1,18 @@
 import React from 'react';
 
-const AdminTicketStatsCards = () => {
+const AdminTicketStatsCards = ({ tickets = [] }) => {
+  const total = tickets.length;
+  const open = tickets.filter(t => t.status === 'OPEN').length;
+  const inProgress = tickets.filter(t => t.status === 'IN_PROGRESS').length;
+  const resolved = tickets.filter(t => t.status === 'RESOLVED').length;
+  const rejected = tickets.filter(t => t.status === 'REJECTED').length;
+
   const stats = [
-    { title: 'Total Tickets', value: '156', icon: '🎫', color: 'bg-blue-100 text-blue-700' },
-    { title: 'Open', value: '42', icon: '🔓', color: 'bg-red-100 text-red-700' },
-    { title: 'In Progress', value: '35', icon: '⏳', color: 'bg-yellow-100 text-yellow-700' },
-    { title: 'Resolved', value: '68', icon: '✅', color: 'bg-green-100 text-green-700' },
-    { title: 'Rejected', value: '11', icon: '❌', color: 'bg-gray-100 text-gray-700' },
+    { title: 'Total Tickets', value: total, icon: '🎫', color: 'bg-blue-100 text-blue-700' },
+    { title: 'Open', value: open, icon: '🔓', color: 'bg-red-100 text-red-700' },
+    { title: 'In Progress', value: inProgress, icon: '⏳', color: 'bg-yellow-100 text-yellow-700' },
+    { title: 'Resolved', value: resolved, icon: '✅', color: 'bg-green-100 text-green-700' },
+    { title: 'Rejected', value: rejected, icon: '❌', color: 'bg-gray-100 text-gray-700' },
   ];
 
   return (

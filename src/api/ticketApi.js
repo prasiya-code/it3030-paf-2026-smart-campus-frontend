@@ -23,7 +23,17 @@ export const getAllTickets = async (filters = {}) => {
 export const getTicketById = async (id) => {
   try {
     const response = await api.get(`/api/tickets/${id}`);
-    return response.data;
+    const ticket = response.data;
+    
+    try {
+      const attachmentsRes = await api.get(`/api/attachments/ticket/${id}`);
+      ticket.attachments = attachmentsRes.data || [];
+    } catch (attachErr) {
+      console.warn('Could not fetch attachments:', attachErr);
+      ticket.attachments = ticket.attachments || [];
+    }
+
+    return ticket;
   } catch (error) {
     throw error.response?.data || error.message;
   }
