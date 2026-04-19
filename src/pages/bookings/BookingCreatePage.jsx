@@ -111,20 +111,50 @@ function BookingCreatePage() {
     try {
       setLoadingAvailability(true);
 
+      // Fetch bookings filtered by resourceId from backend
       const bookings = await getAllBookings({
         resourceId: Number(form.resourceId),
       });
 
       const bookingsArray = Array.isArray(bookings) ? bookings : [];
+      
+      console.log(`[AVAILABILITY] Fetched ${bookingsArray.length} bookings for resource ${form.resourceId}`);
 
-      const bookingsForDate = bookingsArray.filter((b) => {
-        const sameDate = normalizeDate(b.bookingDate) === form.bookingDate;
-        const activeStatus =
-            b.status === "APPROVED" || b.status === "PENDING";
-        return sameDate && activeStatus;
+      // Debug: Log all bookings to see what we're working with
+      console.log(`[AVAILABILITY DEBUG] Form date: ${form.bookingDate}, resourceId: ${form.resourceId}`);
+      bookingsArray.forEach((b, idx) => {
+        console.log(`[AVAILABILITY DEBUG] Booking ${idx}:`, {
+          id: b.id,
+          bookingDate: b.bookingDate,
+          resourceId: b.resourceId,
+          'resource?.id': b.resource?.id,
+          status: b.status,
+          startTime: b.startTime,
+          endTime: b.endTime,
+        });
       });
 
-      const slots = bookingsForDate.map((b) => ({
+      // Filter by date and active status (APPROVED or PENDING)
+      const bookingsForDateAndResource = bookingsArray.filter((b) => {
+        const bookingDate = normalizeDate(b.bookingDate);
+        // Try both resourceId directly and nested in resource object
+        const bookingResourceId = b.resourceId || b.resource?.id;
+        const sameDate = bookingDate === form.bookingDate;
+        const sameResource = String(bookingResourceId) === String(form.resourceId);
+        // Handle both uppercase and lowercase status
+        const statusUpper = String(b.status).toUpperCase();
+        const activeStatus = statusUpper === "APPROVED" || statusUpper === "PENDING";
+        
+        console.log(`[AVAILABILITY DEBUG] Checking booking ${b.id}: date='${bookingDate}' vs '${form.bookingDate}' (${sameDate}), resource='${bookingResourceId}' vs '${form.resourceId}' (${sameResource}), status='${statusUpper}' (${activeStatus})`);
+        
+        if (sameDate && sameResource && activeStatus) {
+          console.log(`[AVAILABILITY] MATCHED booking: ${b.startTime}-${b.endTime} (status: ${b.status})`);
+          return true;
+        }
+        return false;
+      });
+
+      const slots = bookingsForDateAndResource.map((b) => ({
         startTime: b.startTime,
         endTime: b.endTime,
         status: b.status,
@@ -154,8 +184,18 @@ function BookingCreatePage() {
   const isTimeSlotBooked = (startTime, endTime) => {
     if (!startTime || !endTime) return false;
 
+    console.log(`[CONFLICT CHECK] Checking: ${startTime}-${endTime} against ${bookedSlots.length} booked slots`);
+    
     return bookedSlots.some((slot) => {
-      return !(endTime <= slot.startTime || startTime >= slot.endTime);
+      // Check for overlap: two intervals overlap if neither ends before the other starts
+      const noOverlap = endTime <= slot.startTime || startTime >= slot.endTime;
+      const hasOverlap = !noOverlap;
+      
+      if (hasOverlap) {
+        console.log(`[CONFLICT CHECK] CONFLICT with booked slot: ${slot.startTime}-${slot.endTime}`);
+      }
+      
+      return hasOverlap;
     });
   };
 
@@ -434,6 +474,16 @@ function BookingCreatePage() {
       // Get the actual logged-in user's ID
       const userId = user?.id || user?.userId || user?.sub;
 
+          // Helper to ensure time is in HH:mm:ss format for backend LocalTime
+      const formatTimeForBackend = (timeStr) => {
+        if (!timeStr) return timeStr;
+        // If already has seconds, return as-is
+        if (timeStr.length === 8 && timeStr.includes(':')) return timeStr;
+        // Convert HH:mm to HH:mm:ss
+        if (timeStr.length === 5 && timeStr.includes(':')) return `${timeStr}:00`;
+        return timeStr;
+      };
+
       const payload = {
         resourceId: Number(form.resourceId),
         userId: userId ? Number(userId) : undefined,
@@ -441,14 +491,16 @@ function BookingCreatePage() {
         firstName: user?.firstName,
         lastName: user?.lastName,
         bookingDate: form.bookingDate,
-        startTime: form.startTime,
-        endTime: form.endTime,
+        startTime: formatTimeForBackend(form.startTime),
+        endTime: formatTimeForBackend(form.endTime),
         purpose: form.purpose.trim(),
         expectedAttendees: Number(form.expectedAttendees),
         specialRequirements: form.specialRequirements?.trim() || null,
       };
 
       console.log("[BOOKING] Sending payload:", payload);
+      console.log("[BOOKING] Current booked slots:", bookedSlots);
+      console.log("[BOOKING] isTimeSlotBooked result:", isTimeSlotBooked(form.startTime, form.endTime));
 
       const response = await createBooking(payload);
 
