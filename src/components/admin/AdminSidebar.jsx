@@ -32,7 +32,7 @@ const AdminSidebar = () => {
               }
             >
               <span>📊</span>
-              <span className="font-medium">Dashboard</span>
+              <span className="font-medium">Admin Dashboard</span>
             </NavLink>
           </li>
           <li>

@@ -44,7 +44,7 @@ const UserSidebar = () => {
               }
             >
               <span>📊</span>
-              <span className="font-medium">Dashboard</span>
+              <span className="font-medium">User Dashboard</span>
             </NavLink>
           </li>
 
