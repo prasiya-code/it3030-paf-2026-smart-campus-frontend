@@ -1,8 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+import { notificationApi } from '../../api/notificationApi';
 
 const AdminSidebar = () => {
-  const unreadCount = 3; // Sample count for UI
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    loadNotificationCount();
+  }, []);
+
+  const loadNotificationCount = async () => {
+    try {
+      const data = await notificationApi.getAllNotifications();
+      const unread = data ? data.filter(n => !n.isRead).length : 0;
+      setUnreadCount(unread);
+    } catch (err) {
+      console.error('Error loading notification count:', err);
+      setUnreadCount(0);
+    }
+  };
 
   return (
     <aside className="fixed left-0 top-0 w-64 h-screen bg-slate-900 text-white flex flex-col">

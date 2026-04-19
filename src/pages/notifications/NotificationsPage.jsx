@@ -1,59 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { notificationApi } from '../../api/notificationApi';
 
-const sampleNotifications = [
-  {
-    id: 1,
-    title: "Booking Approved",
-    message: "Your booking for Room A has been approved.",
-    type: "BOOKING_APPROVED",
-    isRead: false,
-    relatedBookingId: 101,
-    relatedTicketId: null,
-    createdAt: new Date(Date.now() - 5 * 60000).toISOString()
-  },
-  {
-    id: 2,
-    title: "Booking Rejected",
-    message: "Your booking for Lab 3 was rejected due to scheduling conflict.",
-    type: "BOOKING_REJECTED",
-    isRead: false,
-    relatedBookingId: 102,
-    relatedTicketId: null,
-    createdAt: new Date(Date.now() - 30 * 60000).toISOString()
-  },
-  {
-    id: 3,
-    title: "Ticket Status Changed",
-    message: "Your ticket #TKT-005 is now IN_PROGRESS.",
-    type: "TICKET_STATUS_CHANGED",
-    isRead: true,
-    relatedBookingId: null,
-    relatedTicketId: 55,
-    createdAt: new Date(Date.now() - 2 * 60 * 60000).toISOString()
-  },
-  {
-    id: 4,
-    title: "New Comment Added",
-    message: "A technician added a comment to your ticket #TKT-003.",
-    type: "TICKET_COMMENT_ADDED",
-    isRead: true,
-    relatedBookingId: null,
-    relatedTicketId: 53,
-    createdAt: new Date(Date.now() - 4 * 60 * 60000).toISOString()
-  },
-  {
-    id: 5,
-    title: "Ticket Assigned",
-    message: "Your ticket #TKT-007 has been assigned to technician John.",
-    type: "TICKET_ASSIGNED",
-    isRead: false,
-    relatedBookingId: null,
-    relatedTicketId: 57,
-    createdAt: new Date(Date.now() - 24 * 60 * 60000).toISOString()
-  }
-];
-
 const getTypeStyle = (type) => {
   const styles = {
     BOOKING_APPROVED: {
@@ -105,7 +52,7 @@ const formatRelativeTime = (dateString) => {
 };
 
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState(sampleNotifications);
+  const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -118,14 +65,11 @@ const NotificationsPage = () => {
     try {
       setIsLoading(true);
       const data = await notificationApi.getAllNotifications();
-      if (data && data.length > 0) {
-        setNotifications(data);
-      } else {
-        setNotifications(sampleNotifications);
-      }
+      setNotifications(data || []);
     } catch (err) {
-      console.error('Error loading notifications, using sample data:', err);
-      setNotifications(sampleNotifications);
+      console.error('Error loading notifications:', err);
+      // Don't set error state - just show empty state when there are no notifications
+      setNotifications([]);
     } finally {
       setIsLoading(false);
     }
