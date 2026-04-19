@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
 import { getAllResources } from "../../api/resourceApi";
-import { getMyBookings, cancelBooking as apiCancelBooking } from "../../api/bookingApi";
+import { getMyBookings, cancelBooking as apiCancelBooking, updateBooking } from "../../api/bookingApi";
 import BookingTable from "../../components/bookings/BookingTable";
 import { getBookingCode, includesText } from "./bookingHelpers";
 
@@ -16,6 +16,18 @@ function MyBookingsPage() {
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterResource, setFilterResource] = useState("");
+
+  // Edit modal state
+  const [editingBooking, setEditingBooking] = useState(null);
+  const [editForm, setEditForm] = useState({
+    bookingDate: "",
+    startTime: "",
+    endTime: "",
+    purpose: "",
+    expectedAttendees: "",
+    specialRequirements: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     // Wait for auth to be ready before fetching
@@ -161,18 +173,101 @@ function MyBookingsPage() {
     return false;
   };
 
+  const handleEditClick = (booking) => {
+    setEditingBooking(booking);
+    setEditForm({
+      bookingDate: booking.bookingDate ? booking.bookingDate.slice(0, 10) : "",
+      startTime: booking.startTime || "",
+      endTime: booking.endTime || "",
+      purpose: booking.purpose || "",
+      expectedAttendees: booking.expectedAttendees || "",
+      specialRequirements: booking.specialRequirements || "",
+    });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSave = async () => {
+    if (!editingBooking) return;
+
+    try {
+      setIsSaving(true);
+
+      // Format time values to HH:mm:ss for backend
+      const formatTime = (timeStr) => {
+        if (!timeStr) return timeStr;
+        if (timeStr.length === 8 && timeStr.includes(":")) return timeStr;
+        if (timeStr.length === 5 && timeStr.includes(":")) return `${timeStr}:00`;
+        return timeStr;
+      };
+
+      const payload = {
+        bookingDate: editForm.bookingDate,
+        startTime: formatTime(editForm.startTime),
+        endTime: formatTime(editForm.endTime),
+        purpose: editForm.purpose.trim(),
+        expectedAttendees: Number(editForm.expectedAttendees),
+        specialRequirements: editForm.specialRequirements?.trim() || null,
+      };
+
+      await updateBooking(editingBooking.id, payload);
+      alert("✅ Booking updated successfully");
+      setEditingBooking(null);
+      fetchBookings();
+    } catch (err) {
+      console.error("[MY_BOOKINGS] Edit error:", err);
+      alert("❌ Failed to update: " + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingBooking(null);
+    setEditForm({
+      bookingDate: "",
+      startTime: "",
+      endTime: "",
+      purpose: "",
+      expectedAttendees: "",
+      specialRequirements: "",
+    });
+  };
+
   const renderActionsCell = (b) => {
     const status = b.status;
+    const owned = isOwnBooking(b, user);
+    const canAct = owned || !user;
 
     if (status === "REJECTED" || status === "CANCELLED") {
       return <span className="text-gray-400 text-sm">No actions</span>;
     }
 
-    const canCancelByStatus = status === "PENDING" || status === "APPROVED";
-    const owned = isOwnBooking(b, user);
+    // PENDING bookings: show Edit and Cancel
+    if (status === "PENDING" && canAct) {
+      return (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => handleEditClick(b)}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => cancelBooking(b.id)}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-red-500 to-red-600 rounded-md hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all shadow-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    }
 
-    // Show cancel if owned, or if we don't have auth context (be permissive in demo mode)
-    if (canCancelByStatus && (owned || !user)) {
+    // APPROVED bookings: show Cancel only
+    if (status === "APPROVED" && canAct) {
       return (
         <button
           onClick={() => cancelBooking(b.id)}
@@ -351,6 +446,145 @@ function MyBookingsPage() {
             />
           </div>
         </div>
+
+        {/* Edit Booking Modal */}
+        {editingBooking && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900">Edit Booking</h3>
+                <button
+                  onClick={handleEditCancel}
+                  className="text-slate-400 hover:text-slate-600 text-xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {/* Resource (read-only) */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Resource</label>
+                  <input
+                    type="text"
+                    value={resources.find(r => String(r.id) === String(editingBooking.resourceId || editingBooking.resource?.id))?.name || editingBooking.resource?.name || 'Unknown'}
+                    disabled
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm"
+                  />
+                </div>
+
+                {/* Booking Date */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Booking Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="bookingDate"
+                    value={editForm.bookingDate}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+
+                {/* Time Selection */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Start Time <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="time"
+                      name="startTime"
+                      value={editForm.startTime}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      End Time <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="time"
+                      name="endTime"
+                      value={editForm.endTime}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Purpose */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Purpose <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="purpose"
+                    value={editForm.purpose}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+
+                {/* Expected Attendees */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Expected Attendees <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="expectedAttendees"
+                    value={editForm.expectedAttendees}
+                    onChange={handleEditChange}
+                    min="1"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+
+                {/* Special Requirements */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Special Requirements <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="specialRequirements"
+                    value={editForm.specialRequirements}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="px-5 py-2 bg-white text-slate-700 border border-slate-300 rounded-lg font-medium hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  disabled={isSaving}
+                  className="px-5 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSaving ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                      Saving...
+                    </span>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
