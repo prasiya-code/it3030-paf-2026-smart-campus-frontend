@@ -2,9 +2,17 @@ import api from './axios';
 
 const API_BASE_URL = '/api/bookings';
 
-export const getAllBookings = async () => {
+export const getAllBookings = async (params = {}) => {
   try {
-    const response = await api.get(API_BASE_URL, {
+    // Build query string from params (e.g., { resourceId: 1, status: 'APPROVED' })
+    const queryString = Object.keys(params)
+      .filter(key => params[key] !== undefined && params[key] !== null)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+      .join('&');
+    
+    const url = queryString ? `${API_BASE_URL}?${queryString}` : API_BASE_URL;
+    
+    const response = await api.get(url, {
       withCredentials: true
     });
     return Array.isArray(response.data) ? response.data : [];
