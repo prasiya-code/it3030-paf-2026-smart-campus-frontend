@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
 import { getAllResources } from "../../api/resourceApi";
-import { getMyBookings, cancelBooking as apiCancelBooking, updateBooking } from "../../api/bookingApi";
+import { getMyBookings, cancelBooking as apiCancelBooking, editMyBooking } from "../../api/bookingApi";
 import BookingTable from "../../components/bookings/BookingTable";
 import { getBookingCode, includesText } from "./bookingHelpers";
 
@@ -187,6 +187,17 @@ function MyBookingsPage() {
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
+    
+    // For expectedAttendees, only allow positive integers
+    if (name === "expectedAttendees") {
+      // Remove any non-digit characters
+      const cleanedValue = value.replace(/\D/g, "");
+      // Remove leading zeros
+      const finalValue = cleanedValue.replace(/^0+/, "") || "";
+      setEditForm((prev) => ({ ...prev, [name]: finalValue }));
+      return;
+    }
+    
     setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -213,7 +224,7 @@ function MyBookingsPage() {
         specialRequirements: editForm.specialRequirements?.trim() || null,
       };
 
-      await updateBooking(editingBooking.id, payload);
+      await editMyBooking(editingBooking.id, payload);
       alert("✅ Booking updated successfully");
       setEditingBooking(null);
       fetchBookings();
@@ -535,10 +546,18 @@ function MyBookingsPage() {
                     Expected Attendees <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     name="expectedAttendees"
                     value={editForm.expectedAttendees}
                     onChange={handleEditChange}
+                    onKeyDown={(e) => {
+                      // Prevent typing: -, ., e, E, +, -
+                      if (["-", ".", "e", "E", "+"].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     min="1"
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   />
