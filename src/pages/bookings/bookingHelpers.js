@@ -8,8 +8,9 @@
 /**
  * Safely get resource name from a booking
  * Handles both object and string formats
+ * Uses resources array lookup with string comparison for ID matching
  */
-export const getResourceName = (booking) => {
+export const getResourceName = (booking, resources = []) => {
   if (!booking) return "Unknown";
 
   // If resource is an object with name property
@@ -20,6 +21,16 @@ export const getResourceName = (booking) => {
   // If resource is already a string
   if (typeof booking.resource === "string") {
     return booking.resource;
+  }
+
+  // Look up resource by resourceId with string comparison to handle type mismatch
+  if (resources.length > 0 && booking.resourceId !== undefined && booking.resourceId !== null) {
+    const resource = resources.find(
+      (r) => String(r.id) === String(booking.resourceId)
+    );
+    if (resource) {
+      return resource.name;
+    }
   }
 
   // Fallback

@@ -1,8 +1,13 @@
 import { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../context/AuthContext";
 import { getAllResources } from "../../api/resourceApi";
 import { createBooking, getAllBookings } from "../../api/bookingApi";
 
 function BookingCreatePage() {
+  const navigate = useNavigate();
+  const { user } = useAuthContext();
+
   const today = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -426,8 +431,15 @@ function BookingCreatePage() {
 
     try {
       setIsSubmitting(true);
+      // Get the actual logged-in user's ID
+      const userId = user?.id || user?.userId || user?.sub;
+
       const payload = {
         resourceId: Number(form.resourceId),
+        userId: userId ? Number(userId) : undefined,
+        userEmail: user?.email,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
         bookingDate: form.bookingDate,
         startTime: form.startTime,
         endTime: form.endTime,
@@ -440,10 +452,11 @@ function BookingCreatePage() {
 
       const response = await createBooking(payload);
 
-      alert(
-          "Booking created successfully. Booking Code: " +
-          (response?.data?.bookingCode || "")
-      );
+      const bookingCode = response?.bookingCode || response?.data?.bookingCode || "";
+      alert("Booking created successfully. Booking Code: " + bookingCode);
+
+      // Navigate to My Bookings to see the newly created booking
+      navigate("/my-bookings");
 
       setForm({
         resourceId: "",
@@ -468,10 +481,19 @@ function BookingCreatePage() {
         data: err.response?.data,
       });
 
-      alert(
-          err.response?.data?.message ||
-          "Booking failed. Please try again"
-      );
+      const status = err.response?.status;
+      const message = err.response?.data?.message;
+      
+      let errorMsg;
+      if (status === 403) {
+        errorMsg = "Authentication error (403): Unable to create booking. Please log out and log in again.";
+      } else if (status === 401) {
+        errorMsg = "Session expired. Please log in again.";
+      } else {
+        errorMsg = message || "Booking failed. Please try again";
+      }
+
+      alert(errorMsg);
       setIsSubmitting(false);
     }
   };

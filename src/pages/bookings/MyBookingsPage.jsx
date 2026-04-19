@@ -1,78 +1,52 @@
 import { useEffect, useState } from "react";
+import { useAuthContext } from "../../context/AuthContext";
 import { getAllResources } from "../../api/resourceApi";
-import { getMyBookings, getAllBookings, cancelBooking as apiCancelBooking } from "../../api/bookingApi";
+import { getMyBookings, cancelBooking as apiCancelBooking } from "../../api/bookingApi";
 import BookingTable from "../../components/bookings/BookingTable";
 import { getBookingCode, includesText } from "./bookingHelpers";
 
-// Temporary hardcoded userId for testing (userApi does not exist)
-const userId = 4;
-
 function MyBookingsPage() {
+  const { user, loading: authLoading, isAuthenticated } = useAuthContext();
   const [bookings, setBookings] = useState([]);
   const [displayedBookings, setDisplayedBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [authWarning, setAuthWarning] = useState(null);
   const [searchCode, setSearchCode] = useState("");
-  const [currentUser, setCurrentUser] = useState(null);
   const [resources, setResources] = useState([]);
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterResource, setFilterResource] = useState("");
 
   useEffect(() => {
-    initializePage();
-  }, []);
+    // Wait for auth to be ready before fetching
+    if (authLoading) return;
+    
+    // If not authenticated, show error
+    if (!isAuthenticated) {
+      setError("Please log in to view your bookings.");
+      setLoading(false);
+      return;
+    }
+    
+    fetchBookings();
+    fetchResources();
+  }, [user, authLoading, isAuthenticated]);
 
-  const initializePage = async () => {
-    setLoading(true);
-    setError(null);
-    setAuthWarning(null);
-
-    // Temporary: use hardcoded userId instead of fetching current user
-    // (userApi module does not exist in project)
-    let user = { id: userId };
-    setCurrentUser(user);
-
-    // Fetch bookings with fallback
-    await fetchBookingsSafely(user);
-
-    // Fetch resources for filters
-    await fetchResources();
-
-    setLoading(false);
-  };
-
-  const fetchBookingsSafely = async (user) => {
+  const fetchBookings = async () => {
     try {
-      // Try to get user's bookings first
+      setLoading(true);
+      setError(null);
+      
       const data = await getMyBookings();
       console.log("MY BOOKINGS:", data);
-      console.log("Is array:", Array.isArray(data));
-      console.log("Data length:", data?.length);
-      const arr = Array.isArray(data) ? data : [];
-      setBookings(arr);
-      setDisplayedBookings(arr);
-      setError(null);
+      
+      setBookings(data || []);
     } catch (err) {
-      console.warn("[MY_BOOKINGS] getMyBookings failed, falling back to getAllBookings:", err.message || err);
-
-      // Fallback: try to get all bookings if user bookings fail
-      try {
-        const fallbackData = await getAllBookings();
-        console.log("FALLBACK ALL BOOKINGS:", fallbackData);
-        const arr = Array.isArray(fallbackData) ? fallbackData : [];
-        setBookings(arr);
-        setDisplayedBookings(arr);
-        if (!authWarning) {
-          setAuthWarning("Showing all bookings. User-specific filtering unavailable without authentication.");
-        }
-      } catch (fallbackErr) {
-        console.error("[MY_BOOKINGS] Both booking fetch attempts failed:", fallbackErr.message || fallbackErr);
-        setError("Failed to load bookings. Please check your connection and try again.");
-        setBookings([]);
-        setDisplayedBookings([]);
-      }
+      console.error("Failed to load bookings:", err);
+      setError("Failed to load bookings");
+      setBookings([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,14 +69,14 @@ function MyBookingsPage() {
       }
 
       // Only check ownership if we have current user data
-      if (currentUser && !isOwnBooking(booking, currentUser)) {
+      if (user && !isOwnBooking(booking, user)) {
         alert("You can only cancel your own bookings");
         return;
       }
 
       await apiCancelBooking(id);
       alert("✅ Booking cancelled");
-      fetchBookingsSafely(currentUser);
+      fetchBookings();
     } catch (err) {
       console.error("[MY_BOOKINGS] Cancel error:", err);
       alert("❌ " + (err.response?.data?.message || "Failed to cancel booking"));
@@ -195,10 +169,10 @@ function MyBookingsPage() {
     }
 
     const canCancelByStatus = status === "PENDING" || status === "APPROVED";
-    const owned = isOwnBooking(b, currentUser);
+    const owned = isOwnBooking(b, user);
 
     // Show cancel if owned, or if we don't have auth context (be permissive in demo mode)
-    if (canCancelByStatus && (owned || !currentUser)) {
+    if (canCancelByStatus && (owned || !user)) {
       return (
         <button
           onClick={() => cancelBooking(b.id)}
@@ -212,9 +186,18 @@ function MyBookingsPage() {
     return <span className="text-gray-400 text-sm">No actions</span>;
   };
 
-  // Apply client-side filters
+  // Debug: log bookings changes
+  useEffect(() => {
+    console.log("[MyBookingsPage] Bookings updated:", bookings);
+    console.log("[MyBookingsPage] Bookings count:", bookings.length);
+  }, [bookings]);
+
+  // Apply client-side filters (date, status, resource)
+  // Note: user filtering is already done in fetchBookingsSafely via API
   useEffect(() => {
     let arr = bookings.slice();
+    console.log("[MyBookingsPage] Filtering bookings:", arr.length, "items");
+
     if (filterDate) {
       arr = arr.filter((b) => {
         const bd = b.bookingDate ? b.bookingDate.slice(0, 10) : "";
@@ -228,6 +211,7 @@ function MyBookingsPage() {
       arr = arr.filter((b) => String(b.resource?.id || b.resourceId || b.resource) === String(filterResource));
     }
 
+    console.log("[MyBookingsPage] Filtered result:", arr.length, "items");
     setDisplayedBookings(arr);
   }, [bookings, filterDate, filterStatus, filterResource]);
 
@@ -242,19 +226,6 @@ function MyBookingsPage() {
           </p>
         </div>
 
-        {/* Auth Warning Banner */}
-        {authWarning && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-            <span className="text-amber-500 text-xl">⚠️</span>
-            <div>
-              <p className="text-amber-800 font-medium">{authWarning}</p>
-              <p className="text-amber-700 text-sm mt-1">
-                You can still browse bookings, but some features may be limited.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Error Banner */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
@@ -262,7 +233,7 @@ function MyBookingsPage() {
             <div>
               <p className="text-red-800 font-medium">{error}</p>
               <button
-                onClick={() => initializePage()}
+                onClick={() => fetchBookings()}
                 className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium underline"
               >
                 Try again
@@ -371,6 +342,7 @@ function MyBookingsPage() {
           <div className="p-6">
             <BookingTable
               bookings={displayedBookings}
+              resources={resources}
               loading={loading}
               showActions={true}
               showAdminReason={true}
