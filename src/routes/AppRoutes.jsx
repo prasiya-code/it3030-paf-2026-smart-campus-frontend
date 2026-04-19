@@ -5,6 +5,7 @@ import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 import LoginPage from "../pages/auth/LoginPage";
 import SignUpPage from "../pages/auth/SignUpPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
+import OAuth2CallbackPage from "../pages/auth/OAuth2CallbackPage";
 import NotificationsPage from "../pages/notifications/NotificationsPage";
 import Layout from "../components/layout/Layout";
 import UserLayout from "../layouts/UserLayout";
@@ -45,6 +46,7 @@ function AppRoutes() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/auth/callback" element={<OAuth2CallbackPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
         </Route>
 

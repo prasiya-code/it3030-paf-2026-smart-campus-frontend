@@ -11,6 +11,26 @@ export const notificationApi = {
     }
   },
 
+  // Get unread notifications for current user
+  getUnreadNotifications: async () => {
+    try {
+      const response = await api.get('/api/notifications/unread');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get unread notification count for current user
+  getUnreadCount: async () => {
+    try {
+      const response = await api.get('/api/notifications/count');
+      return response.data.count;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Mark a specific notification as read
   markAsRead: async (notificationId) => {
     try {

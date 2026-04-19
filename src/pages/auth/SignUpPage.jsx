@@ -10,8 +10,7 @@ const SignUpPage = () => {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    role: 'USER'
+    confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -83,8 +82,7 @@ const SignUpPage = () => {
         formData.firstName,
         formData.lastName,
         formData.email,
-        formData.password,
-        formData.role
+        formData.password
       );
 
       if (result.success) {
@@ -254,25 +252,6 @@ const SignUpPage = () => {
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
               )}
-            </div>
-
-            {/* Role Dropdown */}
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-slate-700 mb-2">
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-              >
-                <option value="USER">User</option>
-                <option value="ACADEMIC_STAFF">Academic Staff</option>
-                <option value="TECHNICIAN">Technician</option>
-                <option value="ADMIN">Admin</option>
-              </select>
             </div>
 
             {/* General Error */}

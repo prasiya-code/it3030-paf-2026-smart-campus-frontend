@@ -1,23 +1,53 @@
-import React, { useState } from 'react';
-import { users, USER_ROLES, USER_STATUS } from '../../mocks/userManagementMock';
+import React, { useState, useEffect } from 'react';
+import { userManagementApi } from '../../api/userManagementApi';
+
+const USER_ROLES = {
+  ADMIN: 'ADMIN',
+  STUDENT: 'USER',
+  TECHNICIAN: 'TECHNICIAN',
+  ACADEMIC_STAFF: 'ACADEMIC_STAFF'
+};
+
+const USER_STATUS = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  SUSPENDED: 'SUSPENDED'
+};
 
 const UserManagementPage = () => {
-  const [userList, setUserList] = useState(users);
+  const [userList, setUserList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
 
   const [newUser, setNewUser] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    role: USER_ROLES.STUDENT,
-    department: '',
-    status: USER_STATUS.ACTIVE
+    password: '',
+    role: USER_ROLES.STUDENT
   });
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setIsLoading(true);
+      const users = await userManagementApi.getAllUsers();
+      setUserList(users);
+    } catch (err) {
+      console.error('Error loading users:', err);
+      setError('Failed to load users');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getRoleStyle = (role) => {
     const styles = {
@@ -44,28 +74,37 @@ const UserManagementPage = () => {
     return first + last || first;
   };
 
-  const handleAddUser = () => {
-    const userToAdd = {
-      id: userList.length + 1,
-      ...newUser,
-      createdAt: new Date().toISOString(),
-      lastLogin: null
-    };
-    setUserList([...userList, userToAdd]);
-    setNewUser({
-      firstName: '',
-      lastName: '',
-      email: '',
-      role: USER_ROLES.STUDENT,
-      department: '',
-      status: USER_STATUS.ACTIVE
-    });
-    setIsAddModalOpen(false);
+  const handleAddUser = async () => {
+    try {
+      const result = await userManagementApi.createUser(newUser);
+      if (result.success) {
+        await loadUsers();
+        setNewUser({
+          firstName: '',
+          lastName: '',
+          email: '',
+          password: '',
+          role: USER_ROLES.STUDENT
+        });
+        setIsAddModalOpen(false);
+      } else {
+        setError(result.message || 'Failed to create user');
+      }
+    } catch (err) {
+      console.error('Error creating user:', err);
+      setError('Failed to create user');
+    }
   };
 
-  const handleRemoveUser = (userId) => {
+  const handleRemoveUser = async (userId) => {
     if (window.confirm('Are you sure you want to remove this user?')) {
-      setUserList(userList.filter(user => user.id !== userId));
+      try {
+        await userManagementApi.deleteUser(userId);
+        await loadUsers();
+      } catch (err) {
+        console.error('Error deleting user:', err);
+        setError('Failed to delete user');
+      }
     }
   };
 
@@ -75,37 +114,36 @@ const UserManagementPage = () => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      role: user.role,
-      department: user.department,
-      status: user.status
+      password: '',
+      role: user.role
     });
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateUser = () => {
-    setUserList(userList.map(user =>
-      user.id === selectedUser.id
-        ? { ...user, ...newUser }
-        : user
-    ));
-    setIsEditModalOpen(false);
-    setSelectedUser(null);
-    setNewUser({
-      firstName: '',
-      lastName: '',
-      email: '',
-      role: USER_ROLES.STUDENT,
-      department: '',
-      status: USER_STATUS.ACTIVE
-    });
+  const handleUpdateUser = async () => {
+    try {
+      await userManagementApi.updateUserRole(selectedUser.id, newUser.role);
+      await loadUsers();
+      setIsEditModalOpen(false);
+      setSelectedUser(null);
+      setNewUser({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        role: USER_ROLES.STUDENT
+      });
+    } catch (err) {
+      console.error('Error updating user:', err);
+      setError('Failed to update user');
+    }
   };
 
   const filteredUsers = userList.filter(user => {
     const matchesSearch = 
       `${user.firstName} ${user.lastName} ${user.email}`.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesRole;
   });
 
   const formatRelativeTime = (dateString) => {
@@ -142,7 +180,7 @@ const UserManagementPage = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Search</label>
             <input
@@ -167,19 +205,6 @@ const UserManagementPage = () => {
               <option value={USER_ROLES.ACADEMIC_STAFF}>Academic Staff</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="all">All Status</option>
-              <option value={USER_STATUS.ACTIVE}>Active</option>
-              <option value={USER_STATUS.INACTIVE}>Inactive</option>
-              <option value={USER_STATUS.SUSPENDED}>Suspended</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -191,23 +216,27 @@ const UserManagementPage = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Department</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Last Login</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Auth Provider</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Created At</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              {filteredUsers.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                    Loading users...
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
                     No users found
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => {
                   const roleStyle = getRoleStyle(user.role);
-                  const statusStyle = getStatusStyle(user.status);
                   return (
                     <tr key={user.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -231,15 +260,10 @@ const UserManagementPage = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                        {user.department || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyle.bg} ${statusStyle.text}`}>
-                          {user.status}
-                        </span>
+                        {user.authProvider || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {formatRelativeTime(user.lastLogin)}
+                        {user.createdAt ? formatRelativeTime(user.createdAt) : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
@@ -298,6 +322,15 @@ const UserManagementPage = () => {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
                 <select
                   value={newUser.role}
@@ -308,27 +341,6 @@ const UserManagementPage = () => {
                   <option value={USER_ROLES.ADMIN}>Admin</option>
                   <option value={USER_ROLES.TECHNICIAN}>Technician</option>
                   <option value={USER_ROLES.ACADEMIC_STAFF}>Academic Staff</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
-                <input
-                  type="text"
-                  value={newUser.department}
-                  onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                <select
-                  value={newUser.status}
-                  onChange={(e) => setNewUser({ ...newUser, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  <option value={USER_STATUS.ACTIVE}>Active</option>
-                  <option value={USER_STATUS.INACTIVE}>Inactive</option>
-                  <option value={USER_STATUS.SUSPENDED}>Suspended</option>
                 </select>
               </div>
             </div>
@@ -346,6 +358,7 @@ const UserManagementPage = () => {
                     firstName: '',
                     lastName: '',
                     email: '',
+                    password: '',
                     role: USER_ROLES.STUDENT,
                     department: '',
                     status: USER_STATUS.ACTIVE
@@ -406,27 +419,6 @@ const UserManagementPage = () => {
                   <option value={USER_ROLES.ACADEMIC_STAFF}>Academic Staff</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
-                <input
-                  type="text"
-                  value={newUser.department}
-                  onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                <select
-                  value={newUser.status}
-                  onChange={(e) => setNewUser({ ...newUser, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  <option value={USER_STATUS.ACTIVE}>Active</option>
-                  <option value={USER_STATUS.INACTIVE}>Inactive</option>
-                  <option value={USER_STATUS.SUSPENDED}>Suspended</option>
-                </select>
-              </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button
@@ -443,9 +435,8 @@ const UserManagementPage = () => {
                     firstName: '',
                     lastName: '',
                     email: '',
-                    role: USER_ROLES.STUDENT,
-                    department: '',
-                    status: USER_STATUS.ACTIVE
+                    password: '',
+                    role: USER_ROLES.STUDENT
                   });
                 }}
                 className="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"

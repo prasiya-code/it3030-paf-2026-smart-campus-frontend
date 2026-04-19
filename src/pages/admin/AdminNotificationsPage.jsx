@@ -1,8 +1,62 @@
 import React, { useState } from 'react';
-import { notifications } from '../../mocks/adminDashboardMock';
 
 const AdminNotificationsPage = () => {
-  const [adminNotifications, setAdminNotifications] = useState(notifications);
+  const [adminNotifications, setAdminNotifications] = useState([
+    {
+      id: 1,
+      title: 'New Booking Request',
+      message: 'John Doe has requested to book Lecture Hall A for tomorrow at 10:00 AM',
+      type: 'BOOKING_APPROVED',
+      isRead: false,
+      createdAt: new Date(Date.now() - 30 * 60000).toISOString(),
+      relatedItem: 'BK-001'
+    },
+    {
+      id: 2,
+      title: 'Ticket Assigned',
+      message: 'Maintenance ticket MT-123 has been assigned to you',
+      type: 'TICKET_ASSIGNED',
+      isRead: false,
+      createdAt: new Date(Date.now() - 120 * 60000).toISOString(),
+      relatedItem: 'MT-123'
+    },
+    {
+      id: 3,
+      title: 'Booking Approved',
+      message: 'Your booking for Lab B has been approved',
+      type: 'BOOKING_APPROVED',
+      isRead: true,
+      createdAt: new Date(Date.now() - 300 * 60000).toISOString(),
+      relatedItem: 'BK-002'
+    },
+    {
+      id: 4,
+      title: 'Ticket Comment Added',
+      message: 'A new comment has been added to ticket MT-456',
+      type: 'TICKET_COMMENT_ADDED',
+      isRead: true,
+      createdAt: new Date(Date.now() - 600 * 60000).toISOString(),
+      relatedItem: 'MT-456'
+    },
+    {
+      id: 5,
+      title: 'Booking Cancelled',
+      message: 'Booking BK-003 has been cancelled by the user',
+      type: 'BOOKING_CANCELLED',
+      isRead: false,
+      createdAt: new Date(Date.now() - 900 * 60000).toISOString(),
+      relatedItem: 'BK-003'
+    },
+    {
+      id: 6,
+      title: 'Ticket Status Changed',
+      message: 'Ticket MT-789 status has been updated to IN_PROGRESS',
+      type: 'TICKET_STATUS_CHANGED',
+      isRead: true,
+      createdAt: new Date(Date.now() - 1440 * 60000).toISOString(),
+      relatedItem: 'MT-789'
+    }
+  ]);
   const [filter, setFilter] = useState('all');
 
   const unreadCount = adminNotifications.filter(n => !n.isRead).length;
@@ -86,7 +140,8 @@ const AdminNotificationsPage = () => {
         </div>
         <button
           onClick={handleMarkAllAsRead}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          disabled={unreadCount === 0}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Mark All as Read
         </button>
