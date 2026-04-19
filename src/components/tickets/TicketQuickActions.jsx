@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const TicketQuickActions = () => {
+const TicketQuickActions = ({ onRefresh, onExport }) => {
   return (
     <div className="flex flex-wrap gap-3 mb-6">
       <Link
@@ -12,12 +12,18 @@ const TicketQuickActions = () => {
         <span>Create Ticket</span>
       </Link>
       
-      <button className="px-5 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+      <button 
+        onClick={onExport}
+        className="px-5 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+      >
         <span>📥</span>
         <span>Export</span>
       </button>
       
-      <button className="px-5 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+      <button 
+        onClick={onRefresh}
+        className="px-5 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+      >
         <span>🔄</span>
         <span>Refresh</span>
       </button>

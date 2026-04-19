@@ -61,6 +61,33 @@ const AdminTickets = () => {
     }
   };
 
+  const handleExport = () => {
+    if (!filteredTickets || filteredTickets.length === 0) return;
+    
+    const headers = ['Ticket Code', 'Category', 'Priority', 'Status', 'Created Date'];
+    const csvRows = [headers.join(',')];
+    
+    for (const t of filteredTickets) {
+      const row = [
+        t.ticketCode || t.id,
+        t.category,
+        t.priority,
+        t.status,
+        t.createdAt ? new Date(t.createdAt).toLocaleDateString() : ''
+      ];
+      csvRows.push(row.join(','));
+    }
+    
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'admin_tickets_export.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -75,7 +102,7 @@ const AdminTickets = () => {
       )}
 
       <AdminTicketStatsCards tickets={tickets} />
-      <AdminTicketQuickActions />
+      <AdminTicketQuickActions onRefresh={fetchTickets} onExport={handleExport} />
       <AdminTicketFilters filters={filters} setFilters={setFilters} />
       <AdminTicketTable tickets={filteredTickets} loading={loading} />
     </div>
