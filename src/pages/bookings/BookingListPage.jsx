@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAllBookings, updateBookingWithAdmin } from "../../api/bookingApi";
 import BookingTable from "../../components/bookings/BookingTable";
-import { normalizeValue, getResourceName, getBookingCode } from "../../utils/helpers";
+import { normalizeValue, getResourceName, getBookingCode } from "./bookingHelpers";
 
 function BookingListPage() {
   const [bookings, setBookings] = useState([]);

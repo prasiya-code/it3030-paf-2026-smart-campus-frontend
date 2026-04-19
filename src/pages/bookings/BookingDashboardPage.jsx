@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAllBookings } from "../../api/bookingApi";
 import StatusBadge from "../../components/bookings/StatusBadge";
-import { getResourceName, getUserName, getBookingCode, getBookingDate, getStartTime, getEndTime, includesText } from "../../utils/helpers";
+import { getResourceName, getUserName, getBookingCode, getBookingDate, getStartTime, getEndTime, includesText } from "./bookingHelpers";
 
 function BookingDashboardPage() {
     const [bookings, setBookings] = useState([]);
@@ -26,15 +26,20 @@ function BookingDashboardPage() {
             setLoading(true);
             setError(null);
             const data = await getAllBookings();
-            setBookings(data);
+            console.log("DASHBOARD BOOKINGS:", data);
+            console.log("Is array:", Array.isArray(data));
+            console.log("Data length:", data?.length);
+            const bookingsArray = Array.isArray(data) ? data : [];
+            setBookings(bookingsArray);
 
             const newStats = {
-                TOTAL: data.length,
-                PENDING: data.filter((b) => b.status === "PENDING").length,
-                APPROVED: data.filter((b) => b.status === "APPROVED").length,
-                REJECTED: data.filter((b) => b.status === "REJECTED").length,
-                CANCELLED: data.filter((b) => b.status === "CANCELLED").length
+                TOTAL: bookingsArray.length,
+                PENDING: bookingsArray.filter((b) => b.status === "PENDING").length,
+                APPROVED: bookingsArray.filter((b) => b.status === "APPROVED").length,
+                REJECTED: bookingsArray.filter((b) => b.status === "REJECTED").length,
+                CANCELLED: bookingsArray.filter((b) => b.status === "CANCELLED").length
             };
+            console.log("NEW STATS:", newStats);
             setStats(newStats);
         } catch (err) {
             console.error("[DASHBOARD] Error fetching bookings:", err);
@@ -84,8 +89,7 @@ function BookingDashboardPage() {
 
     const quickActions = [
         { path: "/create-booking", label: "Create Booking", icon: "➕", color: "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white" },
-        { path: "/my-bookings", label: "My Bookings", icon: "📝", color: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50" },
-        { path: "/manage-bookings", label: "Manage Bookings", icon: "⚙️", color: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50" }
+        { path: "/my-bookings", label: "My Bookings", icon: "📝", color: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50" }
     ];
 
     return (

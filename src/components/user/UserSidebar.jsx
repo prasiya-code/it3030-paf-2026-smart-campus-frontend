@@ -135,6 +135,55 @@ const UserSidebar = () => {
             </NavLink>
           </li>
 
+          <li className="pt-4 border-t border-gray-800 mt-4">
+            <p className="px-4 text-xs text-gray-500 uppercase font-semibold mb-2">Bookings</p>
+            <NavLink
+              to="/booking-dashboard"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <span>📅</span>
+              <span className="font-medium">Booking Dashboard</span>
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink
+              to="/create-booking"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <span>➕</span>
+              <span className="font-medium">Create Booking</span>
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink
+              to="/my-bookings"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
+              }
+            >
+              <span>📝</span>
+              <span className="font-medium">My Bookings</span>
+            </NavLink>
+          </li>
+
         </ul>
       </nav>
 
