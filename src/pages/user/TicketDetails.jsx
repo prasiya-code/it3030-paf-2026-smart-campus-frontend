@@ -94,6 +94,28 @@ const TicketDetails = () => {
     );
   }
 
+  const calculateDuration = (start, end) => {
+    if (!start || !end) return '-';
+    const diffMs = new Date(end) - new Date(start);
+    if (diffMs < 0) return '-';
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    if (diffHours === 0) return `${diffMinutes}m`;
+    return `${diffHours}h ${diffMinutes}m`;
+  };
+
+  const ticketAge = ticket?.createdAt 
+    ? calculateDuration(ticket.createdAt, (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') && ticket.resolvedAt ? ticket.resolvedAt : new Date())
+    : '-';
+
+  const timeToFirstResponse = ticket?.createdAt && ticket?.firstResponseAt
+    ? calculateDuration(ticket.createdAt, ticket.firstResponseAt)
+    : (ticket?.firstResponseAt ? '-' : 'Pending');
+
+  const timeToResolution = ticket?.createdAt && ticket?.resolvedAt
+    ? calculateDuration(ticket.createdAt, ticket.resolvedAt)
+    : (ticket?.status === 'RESOLVED' || ticket?.status === 'CLOSED' ? '-' : 'Pending');
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -178,6 +200,21 @@ const TicketDetails = () => {
             <p className="text-gray-900">
               {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : '-'}
             </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Ticket Age</label>
+            <p className="text-gray-900">{ticketAge}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Time to First Response</label>
+            <p className="text-gray-900">{timeToFirstResponse}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Time to Resolution</label>
+            <p className="text-gray-900">{timeToResolution}</p>
           </div>
 
           <div>
