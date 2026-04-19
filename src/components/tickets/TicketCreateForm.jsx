@@ -287,17 +287,17 @@ const TicketCreateForm = () => {
             type="file"
             name="attachments"
             multiple
-            accept="image/*"
+            accept="image/*,.pdf,.doc,.docx,.txt"
             onChange={handleFileChange}
             className="hidden"
             id="file-upload"
           />
-          <label htmlFor="file-upload" className="cursor-pointer">
+          <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center w-full h-full">
             <div className="text-3xl mb-2">📎</div>
             <p className="text-sm text-gray-600 mb-1">
-              <span className="text-primary-600 font-medium">Click to upload</span> or drag and drop
+              <span className="text-primary-600 font-medium">Click to upload</span>
             </p>
-            <p className="text-xs text-gray-400">PNG, JPG up to 5MB (Max 3 files)</p>
+            <p className="text-xs text-gray-400">Images or Documents up to 5MB (Max 3 files)</p>
           </label>
           {formData.attachments.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">

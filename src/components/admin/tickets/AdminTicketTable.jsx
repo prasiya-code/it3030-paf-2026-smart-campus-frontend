@@ -93,12 +93,18 @@ const AdminTicketTable = ({ tickets = [], loading = false }) => {
                     >
                       View
                     </Link>
-                    <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                    <Link 
+                      to={`/admin/tickets/${ticket.id}`}
+                      className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                    >
                       Assign
-                    </button>
-                    <button className="text-green-600 hover:text-green-700 font-medium text-sm">
+                    </Link>
+                    <Link 
+                      to={`/admin/tickets/${ticket.id}`}
+                      className="text-green-600 hover:text-green-700 font-medium text-sm"
+                    >
                       Update
-                    </button>
+                    </Link>
                   </div>
                 </td>
               </tr>
