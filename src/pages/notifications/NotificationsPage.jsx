@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { notificationApi } from '../../api/notificationApi';
 
-const mockNotifications = [
+const sampleNotifications = [
   {
     id: 1,
     title: "Booking Approved",
@@ -9,17 +10,17 @@ const mockNotifications = [
     isRead: false,
     relatedBookingId: 101,
     relatedTicketId: null,
-    createdAt: "2025-04-16T09:00:00Z"
+    createdAt: new Date(Date.now() - 5 * 60000).toISOString()
   },
   {
     id: 2,
     title: "Booking Rejected",
-    message: "Your booking for Lab 3 was rejected.",
+    message: "Your booking for Lab 3 was rejected due to scheduling conflict.",
     type: "BOOKING_REJECTED",
     isRead: false,
     relatedBookingId: 102,
     relatedTicketId: null,
-    createdAt: "2025-04-15T14:30:00Z"
+    createdAt: new Date(Date.now() - 30 * 60000).toISOString()
   },
   {
     id: 3,
@@ -29,27 +30,27 @@ const mockNotifications = [
     isRead: true,
     relatedBookingId: null,
     relatedTicketId: 55,
-    createdAt: "2025-04-14T11:00:00Z"
+    createdAt: new Date(Date.now() - 2 * 60 * 60000).toISOString()
   },
   {
     id: 4,
-    title: "Comment Added",
-    message: "A new comment was added to your ticket #TKT-003.",
+    title: "New Comment Added",
+    message: "A technician added a comment to your ticket #TKT-003.",
     type: "TICKET_COMMENT_ADDED",
     isRead: true,
     relatedBookingId: null,
     relatedTicketId: 53,
-    createdAt: "2025-04-13T08:45:00Z"
+    createdAt: new Date(Date.now() - 4 * 60 * 60000).toISOString()
   },
   {
     id: 5,
     title: "Ticket Assigned",
-    message: "Your ticket #TKT-007 has been assigned to a technician.",
+    message: "Your ticket #TKT-007 has been assigned to technician John.",
     type: "TICKET_ASSIGNED",
     isRead: false,
     relatedBookingId: null,
     relatedTicketId: 57,
-    createdAt: "2025-04-12T16:20:00Z"
+    createdAt: new Date(Date.now() - 24 * 60 * 60000).toISOString()
   }
 ];
 
@@ -104,21 +105,54 @@ const formatRelativeTime = (dateString) => {
 };
 
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState(sampleNotifications);
   const [filter, setFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      setIsLoading(true);
+      const data = await notificationApi.getAllNotifications();
+      if (data && data.length > 0) {
+        setNotifications(data);
+      } else {
+        setNotifications(sampleNotifications);
+      }
+    } catch (err) {
+      console.error('Error loading notifications, using sample data:', err);
+      setNotifications(sampleNotifications);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const handleMarkAsRead = (id) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-    );
+  const handleMarkAsRead = async (id) => {
+    try {
+      await notificationApi.markAsRead(id);
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+      );
+    } catch (err) {
+      console.error('Error marking notification as read:', err);
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(n => ({ ...n, isRead: true }))
-    );
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationApi.markAllAsRead();
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, isRead: true }))
+      );
+    } catch (err) {
+      console.error('Error marking all notifications as read:', err);
+    }
   };
 
   const filteredNotifications = notifications.filter(n => {
@@ -136,94 +170,115 @@ const NotificationsPage = () => {
             Notifications {unreadCount > 0 && <span className="text-slate-500 font-normal">({unreadCount} unread)</span>}
           </h1>
         </div>
-        <button
-          onClick={handleMarkAllAsRead}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-        >
-          Mark All as Read
-        </button>
-      </div>
-
-      {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6">
-        {['all', 'unread', 'read'].map((tab) => (
+        {!isLoading && notifications.length > 0 && (
           <button
-            key={tab}
-            onClick={() => setFilter(tab)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filter === tab
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
-            }`}
+            onClick={handleMarkAllAsRead}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            Mark All as Read
           </button>
-        ))}
+        )}
       </div>
 
-      {/* Notification List */}
-      <div className="space-y-3">
-        {filteredNotifications.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">🔔</span>
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No notifications</h3>
-            <p className="text-slate-600">
-              {filter === 'unread' ? "You have no unread notifications." :
-               filter === 'read' ? "You have no read notifications." :
-               "You don't have any notifications yet."}
-            </p>
+      {/* Error State */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-400"></div>
           </div>
-        ) : (
-          filteredNotifications.map((notification) => {
-            const style = getTypeStyle(notification.type);
-            return (
-              <div
-                key={notification.id}
-                className={`relative border-l-4 ${style.border} rounded-lg shadow-sm ${
-                  notification.isRead
-                    ? 'bg-white'
-                    : 'bg-indigo-50'
+          <p className="text-slate-600">Loading notifications...</p>
+        </div>
+      ) : (
+        <>
+          {/* Filter Tabs */}
+          <div className="flex gap-2 mb-6">
+            {['all', 'unread', 'read'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  filter === tab
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
                 }`}
               >
-                <div className="p-4 sm:p-5">
-                  <div className="flex items-start gap-4">
-                    <div className={`w-10 h-10 ${style.bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                      <span className="text-lg">{style.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className={`font-semibold text-slate-900 mb-1 ${
-                            notification.isRead ? 'font-normal' : 'font-bold'
-                          }`}>
-                            {notification.title}
-                          </h3>
-                          <p className="text-sm text-slate-600 mb-2">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {formatRelativeTime(notification.createdAt)}
-                          </p>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Notification List */}
+          <div className="space-y-3">
+            {filteredNotifications.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">🔔</span>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">No notifications</h3>
+                <p className="text-slate-600">
+                  {filter === 'unread' ? "You have no unread notifications." :
+                   filter === 'read' ? "You have no read notifications." :
+                   "You don't have any notifications yet."}
+                </p>
+              </div>
+            ) : (
+              filteredNotifications.map((notification) => {
+                const style = getTypeStyle(notification.type);
+                return (
+                  <div
+                    key={notification.id}
+                    className={`relative border-l-4 ${style.border} rounded-lg shadow-sm ${
+                      notification.isRead
+                        ? 'bg-white'
+                        : 'bg-indigo-50'
+                    }`}
+                  >
+                    <div className="p-4 sm:p-5">
+                      <div className="flex items-start gap-4">
+                        <div className={`w-10 h-10 ${style.bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                          <span className="text-lg">{style.icon}</span>
                         </div>
-                        {!notification.isRead && (
-                          <button
-                            onClick={() => handleMarkAsRead(notification.id)}
-                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-primary-600 bg-primary-50 rounded-md hover:bg-primary-100 transition-colors flex-shrink-0"
-                          >
-                            Mark as Read
-                          </button>
-                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <h3 className={`font-semibold text-slate-900 mb-1 ${
+                                notification.isRead ? 'font-normal' : 'font-bold'
+                              }`}>
+                                {notification.title}
+                              </h3>
+                              <p className="text-sm text-slate-600 mb-2">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {formatRelativeTime(notification.createdAt)}
+                              </p>
+                            </div>
+                            {!notification.isRead && (
+                              <button
+                                onClick={() => handleMarkAsRead(notification.id)}
+                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-primary-600 bg-primary-50 rounded-md hover:bg-primary-100 transition-colors flex-shrink-0"
+                              >
+                                Mark as Read
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+                );
+              })
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

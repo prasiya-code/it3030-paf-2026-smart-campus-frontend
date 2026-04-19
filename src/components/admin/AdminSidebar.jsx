@@ -2,6 +2,8 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const AdminSidebar = () => {
+  const unreadCount = 3; // Sample count for UI
+
   return (
     <aside className="fixed left-0 top-0 w-64 h-screen bg-slate-900 text-white flex flex-col">
       <div className="p-6 border-b border-slate-700">
@@ -106,11 +108,28 @@ const AdminSidebar = () => {
             >
               <span className="relative">
                 🔔
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                  8
-                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </span>
               <span className="font-medium">Notifications</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-md transition-all ${
+                  isActive
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`
+              }
+            >
+              <span>🏠</span>
+              <span className="font-medium">User Dashboard</span>
             </NavLink>
           </li>
         </ul>

@@ -1,17 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import { useAuthContext } from '../../context/AuthContext';
+import axios from '../../api/axios';
 
 const AdminProfilePage = () => {
+  const { user } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: 'Admin',
-    lastName: 'User',
-    email: 'admin@example.com',
-    role: 'ADMIN',
-    department: 'IT Operations',
-    phone: '+1 234 567 8900'
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: 'ADMIN'
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        role: user.role || 'ADMIN'
+      });
+    }
+  }, [user]);
 
   const getInitials = (firstName, lastName) => {
     const first = firstName?.charAt(0).toUpperCase() || '';
@@ -21,23 +36,48 @@ const AdminProfilePage = () => {
 
   const handleEdit = () => {
     setIsEditing(true);
+    setError(null);
+    setSuccess(null);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setFormData({
-      firstName: 'Admin',
-      lastName: 'User',
-      email: 'admin@example.com',
-      role: 'ADMIN',
-      department: 'IT Operations',
-      phone: '+1 234 567 8900'
-    });
+    setError(null);
+    setSuccess(null);
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        role: user.role || 'ADMIN'
+      });
+    }
   };
 
-  const handleSave = () => {
-    // TODO: Call API to save profile
-    setIsEditing(false);
+  const handleSave = async () => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await axios.put('/api/user/profile', {
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
+
+      if (response.data.success) {
+        setSuccess('Profile updated successfully');
+        setIsEditing(false);
+        // Refresh user data
+        window.location.reload();
+      } else {
+        setError(response.data.message || 'Failed to update profile');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -51,6 +91,20 @@ const AdminProfilePage = () => {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Page Title */}
       <h1 className="text-2xl font-bold text-slate-900 mb-6">Admin Profile</h1>
+
+      {/* Success Message */}
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-green-800">{success}</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
 
       {/* Profile Info Card */}
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
@@ -68,9 +122,6 @@ const AdminProfilePage = () => {
             <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
               <span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-800 text-sm font-medium rounded-full">
                 {formData.role}
-              </span>
-              <span className="inline-block px-3 py-1 bg-slate-100 text-slate-800 text-sm font-medium rounded-full">
-                {formData.department}
               </span>
             </div>
           </div>
@@ -105,21 +156,7 @@ const AdminProfilePage = () => {
                 onChange={handleChange}
                 placeholder="Enter email"
                 className="sm:col-span-2"
-              />
-              <Input
-                label="Department"
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                placeholder="Enter department"
-              />
-              <Input
-                label="Phone"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter phone number"
+                disabled
               />
             </>
           ) : (
@@ -140,14 +177,6 @@ const AdminProfilePage = () => {
                 <label className="block text-sm font-medium text-slate-500 mb-1">Role</label>
                 <div className="text-slate-900 font-medium">{formData.role}</div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-500 mb-1">Department</label>
-                <div className="text-slate-900 font-medium">{formData.department || '-'}</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-500 mb-1">Phone</label>
-                <div className="text-slate-900 font-medium">{formData.phone || '-'}</div>
-              </div>
             </>
           )}
         </div>
@@ -156,8 +185,10 @@ const AdminProfilePage = () => {
       {/* Action Buttons */}
       {isEditing ? (
         <div className="flex gap-3">
-          <Button onClick={handleSave}>Save Changes</Button>
-          <Button variant="secondary" onClick={handleCancel}>Cancel</Button>
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </Button>
+          <Button variant="secondary" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
         </div>
       ) : (
         <Button onClick={handleEdit}>Edit Profile</Button>

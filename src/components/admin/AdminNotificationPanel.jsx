@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AdminNotificationPanel = ({ notifications }) => {
+const AdminNotificationPanel = ({ notifications, onMarkAsRead }) => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'BOOKING_APPROVED':
@@ -55,7 +55,10 @@ const AdminNotificationPanel = ({ notifications }) => {
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-xs text-slate-500">Ref: {notification.relatedItem}</span>
                   {!notification.isRead && (
-                    <button className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                    <button
+                      onClick={() => onMarkAsRead(notification.id)}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    >
                       Mark as read
                     </button>
                   )}

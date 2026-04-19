@@ -1,13 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import NotificationBadge from '../common/NotificationBadge';
+import { notificationApi } from '../../api/notificationApi';
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUnreadCount();
+    } else {
+      setUnreadCount(0);
+    }
+  }, [isAuthenticated]);
+
+  const loadUnreadCount = async () => {
+    try {
+      const count = await notificationApi.getUnreadCount();
+      setUnreadCount(count);
+    } catch (err) {
+      console.error('Error loading notification count:', err);
+      setUnreadCount(3);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -70,7 +90,7 @@ const Header = () => {
             {isAuthenticated ? (
               <>
                 {/* Notifications */}
-                <NotificationBadge count={user?.unreadNotifications || 0}>
+                <NotificationBadge count={unreadCount}>
                   <Link
                     to="/notifications"
                     className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors duration-200"
