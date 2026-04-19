@@ -135,6 +135,8 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated,
+    setUser,
+    setIsAuthenticated,
     login,
     loginWithGoogle,
     signup,
