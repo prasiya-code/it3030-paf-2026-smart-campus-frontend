@@ -2,6 +2,14 @@
 @import "tailwindcss";
 
 
+body {
+  background-color: #F8FAFC;
+  color: #475569;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 @theme {
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;

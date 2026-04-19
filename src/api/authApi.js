@@ -41,4 +41,10 @@ export const authApi = {
       credentials: 'include',
     });
   },
+
+  // Get users by role
+  getUsersByRole: async (role) => {
+    const response = await axiosInstance.get(`/api/users/role/${role}`);
+    return response.data;
+  },
 };

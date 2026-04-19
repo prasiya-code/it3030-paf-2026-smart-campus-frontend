@@ -46,6 +46,7 @@ const TicketDetails = () => {
       case 'Open': return 'bg-red-100 text-red-700';
       case 'In Progress': return 'bg-blue-100 text-blue-700';
       case 'Resolved': return 'bg-green-100 text-green-700';
+      case 'REJECTED': return 'bg-gray-100 text-gray-700 border border-gray-300';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -139,6 +140,13 @@ const TicketDetails = () => {
       )}
 
       <div className="bg-white rounded-xl shadow-sm p-6">
+        {ticket.status === 'REJECTED' && ticket.rejectionReason && (
+          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+            <h3 className="text-red-800 font-bold mb-1">Rejection Reason:</h3>
+            <p className="text-red-700 whitespace-pre-wrap">{ticket.rejectionReason}</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Ticket Code</label>
@@ -181,6 +189,38 @@ const TicketDetails = () => {
           <label className="block text-sm font-medium text-gray-600 mb-2">Description</label>
           <p className="text-gray-900 whitespace-pre-wrap">{ticket.description || '-'}</p>
         </div>
+
+        {ticket.attachments && ticket.attachments.length > 0 && (
+          <div className="border-t border-gray-200 pt-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Attachments</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {ticket.attachments.map((attachment) => (
+                <div key={attachment.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="text-2xl">📎</div>
+                  <div className="overflow-hidden flex-1">
+                    <p className="text-sm font-medium text-gray-900 truncate" title={attachment.fileName}>
+                      {attachment.fileName}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {(attachment.fileSize / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <a
+                    href={`http://localhost:8080/api/attachments/download/${attachment.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary-600 hover:text-primary-700"
+                    title="Download"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="border-t border-gray-200 pt-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>

@@ -8,12 +8,12 @@ const AdminTicketMetaPanel = ({ ticket }) => {
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">Created By</label>
-          <p className="text-gray-900">{ticket.createdBy}</p>
+          <p className="text-gray-900">{ticket.createdBy ? `${ticket.createdBy.firstName} ${ticket.createdBy.lastName || ''}` : '-'}</p>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">Assigned To</label>
-          <p className="text-gray-900">{ticket.assignedTo || 'Unassigned'}</p>
+          <p className="text-gray-900">{ticket.assignedTo ? `${ticket.assignedTo.firstName} ${ticket.assignedTo.lastName || ''}` : 'Unassigned'}</p>
         </div>
 
         <div>
