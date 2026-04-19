@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getTicketById, deleteTicket } from '../../api/ticketApi';
+import AdminTicketCommentsPanel from '../../components/admin/tickets/AdminTicketCommentsPanel';
 
 const TicketDetails = () => {
   const { id } = useParams();
@@ -241,6 +242,10 @@ const TicketDetails = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <AdminTicketCommentsPanel ticketId={ticket.id} />
       </div>
     </div>
   );
