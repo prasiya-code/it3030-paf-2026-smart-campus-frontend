@@ -74,27 +74,33 @@ export const updateBooking = async (id, bookingData) => {
   }
 };
 
-export const updateBookingWithAdmin = async (id, updateData, adminId) => {
+export const approveBooking = async (id) => {
   try {
-    const response = await api.patch(`${API_BASE_URL}/${id}/admin-update`, {
-      ...updateData,
-      adminId
+    const response = await api.put(`${API_BASE_URL}/${id}`, {
+      status: 'APPROVED'
     }, {
       withCredentials: true
     });
     return response.data;
   } catch (error) {
-    console.error('ADMIN UPDATE BOOKING ERROR:', error);
+    console.error('APPROVE BOOKING ERROR:', error);
     throw error;
   }
 };
 
-export const approveBooking = async (id, adminId) => {
-  return updateBookingWithAdmin(id, { status: 'APPROVED' }, adminId);
-};
-
-export const rejectBooking = async (id, adminReason, adminId) => {
-  return updateBookingWithAdmin(id, { status: 'REJECTED', adminReason }, adminId);
+export const rejectBooking = async (id, adminReason) => {
+  try {
+    const response = await api.put(`${API_BASE_URL}/${id}`, {
+      status: 'REJECTED',
+      adminReason: adminReason || 'Rejected by admin'
+    }, {
+      withCredentials: true
+    });
+    return response.data;
+  } catch (error) {
+    console.error('REJECT BOOKING ERROR:', error);
+    throw error;
+  }
 };
 
 export const searchBookings = async (query) => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAllBookings, updateBookingWithAdmin } from "../../api/bookingApi";
+import { getAllBookings, approveBooking, rejectBooking } from "../../api/bookingApi";
 import BookingTable from "../../components/bookings/BookingTable";
 import { normalizeValue, getResourceName, getBookingCode } from "./bookingHelpers";
 
@@ -30,11 +30,10 @@ function BookingListPage() {
     }
   };
 
-  const approveBooking = async (id) => {
+  const handleApprove = async (id) => {
     try {
       console.log("[MANAGE_BOOKINGS] Approving booking:", id);
-      // Pass adminId=2 (admin user from sample data) or any admin ID
-      await updateBookingWithAdmin(id, { status: "APPROVED" }, 2);
+      await approveBooking(id);
       alert("✅ Booking approved");
       fetchBookings();
     } catch (err) {
@@ -43,16 +42,13 @@ function BookingListPage() {
     }
   };
 
-  const rejectBookingWithReason = async () => {
+  const handleReject = async () => {
     if (!selectedBookingId) return;
 
     try {
       const reason = adminReason || "Rejected by admin";
       console.log("[MANAGE_BOOKINGS] Rejecting booking:", selectedBookingId);
-      await updateBookingWithAdmin(selectedBookingId, {
-        status: "REJECTED",
-        adminReason: reason
-      }, 2);
+      await rejectBooking(selectedBookingId, reason);
       alert("✅ Booking rejected");
       setShowReasonModal(false);
       setAdminReason("");
@@ -172,7 +168,7 @@ function BookingListPage() {
               booking.status === "PENDING" ? (
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => approveBooking(booking.id)}
+                    onClick={() => handleApprove(booking.id)}
                     className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-md hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all shadow-sm"
                   >
                     Approve
@@ -224,7 +220,7 @@ function BookingListPage() {
 
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={rejectBookingWithReason}
+                  onClick={handleReject}
                   className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all shadow-sm"
                 >
                   Reject Booking
