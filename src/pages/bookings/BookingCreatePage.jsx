@@ -474,16 +474,7 @@ function BookingCreatePage() {
       // Get the actual logged-in user's ID
       const userId = user?.id || user?.userId || user?.sub;
 
-          // Helper to ensure time is in HH:mm:ss format for backend LocalTime
-      const formatTimeForBackend = (timeStr) => {
-        if (!timeStr) return timeStr;
-        // If already has seconds, return as-is
-        if (timeStr.length === 8 && timeStr.includes(':')) return timeStr;
-        // Convert HH:mm to HH:mm:ss
-        if (timeStr.length === 5 && timeStr.includes(':')) return `${timeStr}:00`;
-        return timeStr;
-      };
-
+      // Send time in HH:mm format as expected by backend LocalTime
       const payload = {
         resourceId: Number(form.resourceId),
         userId: userId ? Number(userId) : undefined,
@@ -491,14 +482,15 @@ function BookingCreatePage() {
         firstName: user?.firstName,
         lastName: user?.lastName,
         bookingDate: form.bookingDate,
-        startTime: formatTimeForBackend(form.startTime),
-        endTime: formatTimeForBackend(form.endTime),
+        startTime: form.startTime,
+        endTime: form.endTime,
         purpose: form.purpose.trim(),
         expectedAttendees: Number(form.expectedAttendees),
         specialRequirements: form.specialRequirements?.trim() || null,
       };
 
       console.log("[BOOKING] Sending payload:", payload);
+      console.log("[BOOKING] Time format check - startTime:", payload.startTime, "endTime:", payload.endTime);
       console.log("[BOOKING] Current booked slots:", bookedSlots);
       console.log("[BOOKING] isTimeSlotBooked result:", isTimeSlotBooked(form.startTime, form.endTime));
 
