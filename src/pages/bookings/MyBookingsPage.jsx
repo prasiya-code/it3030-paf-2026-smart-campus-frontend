@@ -207,22 +207,18 @@ function MyBookingsPage() {
     try {
       setIsSaving(true);
 
-      // Format time values to HH:mm:ss for backend
-      const formatTime = (timeStr) => {
-        if (!timeStr) return timeStr;
-        if (timeStr.length === 8 && timeStr.includes(":")) return timeStr;
-        if (timeStr.length === 5 && timeStr.includes(":")) return `${timeStr}:00`;
-        return timeStr;
-      };
-
+      // Send time in HH:mm format as expected by backend LocalTime
       const payload = {
         bookingDate: editForm.bookingDate,
-        startTime: formatTime(editForm.startTime),
-        endTime: formatTime(editForm.endTime),
+        startTime: editForm.startTime,
+        endTime: editForm.endTime,
         purpose: editForm.purpose.trim(),
         expectedAttendees: Number(editForm.expectedAttendees),
         specialRequirements: editForm.specialRequirements?.trim() || null,
       };
+
+      console.log("[EDIT BOOKING] Sending payload:", payload);
+      console.log("[EDIT BOOKING] Time format check - startTime:", payload.startTime, "endTime:", payload.endTime);
 
       await editMyBooking(editingBooking.id, payload);
       alert("✅ Booking updated successfully");
