@@ -1,58 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { notificationApi } from '../../api/notificationApi';
-
-const sampleNotifications = [
-  {
-    id: 1,
-    title: "Booking Approved",
-    message: "Your booking for Room A has been approved.",
-    type: "BOOKING_APPROVED",
-    isRead: false,
-    relatedBookingId: 101,
-    relatedTicketId: null,
-    createdAt: new Date(Date.now() - 5 * 60000).toISOString()
-  },
-  {
-    id: 2,
-    title: "Booking Rejected",
-    message: "Your booking for Lab 3 was rejected due to scheduling conflict.",
-    type: "BOOKING_REJECTED",
-    isRead: false,
-    relatedBookingId: 102,
-    relatedTicketId: null,
-    createdAt: new Date(Date.now() - 30 * 60000).toISOString()
-  },
-  {
-    id: 3,
-    title: "Ticket Status Changed",
-    message: "Your ticket #TKT-005 is now IN_PROGRESS.",
-    type: "TICKET_STATUS_CHANGED",
-    isRead: true,
-    relatedBookingId: null,
-    relatedTicketId: 55,
-    createdAt: new Date(Date.now() - 2 * 60 * 60000).toISOString()
-  },
-  {
-    id: 4,
-    title: "New Comment Added",
-    message: "A technician added a comment to your ticket #TKT-003.",
-    type: "TICKET_COMMENT_ADDED",
-    isRead: true,
-    relatedBookingId: null,
-    relatedTicketId: 53,
-    createdAt: new Date(Date.now() - 4 * 60 * 60000).toISOString()
-  },
-  {
-    id: 5,
-    title: "Ticket Assigned",
-    message: "Your ticket #TKT-007 has been assigned to technician John.",
-    type: "TICKET_ASSIGNED",
-    isRead: false,
-    relatedBookingId: null,
-    relatedTicketId: 57,
-    createdAt: new Date(Date.now() - 24 * 60 * 60000).toISOString()
-  }
-];
+import NotificationPreferences from '../../components/notifications/NotificationPreferences';
 
 const getTypeStyle = (type) => {
   const styles = {
@@ -105,27 +53,42 @@ const formatRelativeTime = (dateString) => {
 };
 
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState(sampleNotifications);
+  const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [preferences, setPreferences] = useState({});
 
   useEffect(() => {
     loadNotifications();
+    loadPreferences();
   }, []);
+
+  const loadPreferences = () => {
+    const saved = localStorage.getItem('notificationPreferences');
+    if (saved) {
+      setPreferences(JSON.parse(saved));
+    } else {
+      // Default: all enabled
+      const defaults = {};
+      const categories = ['BOOKING_APPROVED', 'BOOKING_REJECTED', 'BOOKING_CANCELLED', 'TICKET_STATUS_CHANGED', 'TICKET_COMMENT_ADDED', 'TICKET_ASSIGNED'];
+      categories.forEach(cat => {
+        defaults[cat] = true;
+      });
+      setPreferences(defaults);
+    }
+  };
 
   const loadNotifications = async () => {
     try {
       setIsLoading(true);
       const data = await notificationApi.getAllNotifications();
-      if (data && data.length > 0) {
-        setNotifications(data);
-      } else {
-        setNotifications(sampleNotifications);
-      }
+      setNotifications(data || []);
     } catch (err) {
-      console.error('Error loading notifications, using sample data:', err);
-      setNotifications(sampleNotifications);
+      console.error('Error loading notifications:', err);
+      // Don't set error state - just show empty state when there are no notifications
+      setNotifications([]);
     } finally {
       setIsLoading(false);
     }
@@ -155,9 +118,18 @@ const NotificationsPage = () => {
     }
   };
 
+  const handleSavePreferences = (newPreferences) => {
+    setPreferences(newPreferences);
+  };
+
   const filteredNotifications = notifications.filter(n => {
-    if (filter === 'unread') return !n.isRead;
-    if (filter === 'read') return n.isRead;
+    // Apply read/unread filter
+    if (filter === 'unread' && n.isRead) return false;
+    if (filter === 'read' && !n.isRead) return false;
+
+    // Apply preference-based category filter
+    if (preferences[n.type] === false) return false;
+
     return true;
   });
 
@@ -170,14 +142,22 @@ const NotificationsPage = () => {
             Notifications {unreadCount > 0 && <span className="text-slate-500 font-normal">({unreadCount} unread)</span>}
           </h1>
         </div>
-        {!isLoading && notifications.length > 0 && (
+        <div className="flex gap-2">
           <button
-            onClick={handleMarkAllAsRead}
+            onClick={() => setShowPreferences(true)}
             className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            Mark All as Read
+            ⚙️ Preferences
           </button>
-        )}
+          {!isLoading && notifications.length > 0 && (
+            <button
+              onClick={handleMarkAllAsRead}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Mark All as Read
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Error State */}
@@ -279,6 +259,13 @@ const NotificationsPage = () => {
           </div>
         </>
       )}
+
+      {/* Notification Preferences Modal */}
+      <NotificationPreferences
+        isOpen={showPreferences}
+        onClose={() => setShowPreferences(false)}
+        onSave={handleSavePreferences}
+      />
     </div>
   );
 };

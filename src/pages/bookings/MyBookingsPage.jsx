@@ -1,78 +1,64 @@
 import { useEffect, useState } from "react";
+import { useAuthContext } from "../../context/AuthContext";
 import { getAllResources } from "../../api/resourceApi";
-import { getMyBookings, getAllBookings, cancelBooking as apiCancelBooking } from "../../api/bookingApi";
+import { getMyBookings, cancelBooking as apiCancelBooking, editMyBooking } from "../../api/bookingApi";
 import BookingTable from "../../components/bookings/BookingTable";
 import { getBookingCode, includesText } from "./bookingHelpers";
 
-// Temporary hardcoded userId for testing (userApi does not exist)
-const userId = 4;
-
 function MyBookingsPage() {
+  const { user, loading: authLoading, isAuthenticated } = useAuthContext();
   const [bookings, setBookings] = useState([]);
   const [displayedBookings, setDisplayedBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [authWarning, setAuthWarning] = useState(null);
   const [searchCode, setSearchCode] = useState("");
-  const [currentUser, setCurrentUser] = useState(null);
   const [resources, setResources] = useState([]);
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterResource, setFilterResource] = useState("");
 
+  // Edit modal state
+  const [editingBooking, setEditingBooking] = useState(null);
+  const [editForm, setEditForm] = useState({
+    bookingDate: "",
+    startTime: "",
+    endTime: "",
+    purpose: "",
+    expectedAttendees: "",
+    specialRequirements: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
   useEffect(() => {
-    initializePage();
-  }, []);
+    // Wait for auth to be ready before fetching
+    if (authLoading) return;
+    
+    // If not authenticated, show error
+    if (!isAuthenticated) {
+      setError("Please log in to view your bookings.");
+      setLoading(false);
+      return;
+    }
+    
+    fetchBookings();
+    fetchResources();
+  }, [user, authLoading, isAuthenticated]);
 
-  const initializePage = async () => {
-    setLoading(true);
-    setError(null);
-    setAuthWarning(null);
-
-    // Temporary: use hardcoded userId instead of fetching current user
-    // (userApi module does not exist in project)
-    let user = { id: userId };
-    setCurrentUser(user);
-
-    // Fetch bookings with fallback
-    await fetchBookingsSafely(user);
-
-    // Fetch resources for filters
-    await fetchResources();
-
-    setLoading(false);
-  };
-
-  const fetchBookingsSafely = async (user) => {
+  const fetchBookings = async () => {
     try {
-      // Try to get user's bookings first
+      setLoading(true);
+      setError(null);
+      
       const data = await getMyBookings();
       console.log("MY BOOKINGS:", data);
-      console.log("Is array:", Array.isArray(data));
-      console.log("Data length:", data?.length);
-      const arr = Array.isArray(data) ? data : [];
-      setBookings(arr);
-      setDisplayedBookings(arr);
-      setError(null);
+      
+      setBookings(data || []);
     } catch (err) {
-      console.warn("[MY_BOOKINGS] getMyBookings failed, falling back to getAllBookings:", err.message || err);
-
-      // Fallback: try to get all bookings if user bookings fail
-      try {
-        const fallbackData = await getAllBookings();
-        console.log("FALLBACK ALL BOOKINGS:", fallbackData);
-        const arr = Array.isArray(fallbackData) ? fallbackData : [];
-        setBookings(arr);
-        setDisplayedBookings(arr);
-        if (!authWarning) {
-          setAuthWarning("Showing all bookings. User-specific filtering unavailable without authentication.");
-        }
-      } catch (fallbackErr) {
-        console.error("[MY_BOOKINGS] Both booking fetch attempts failed:", fallbackErr.message || fallbackErr);
-        setError("Failed to load bookings. Please check your connection and try again.");
-        setBookings([]);
-        setDisplayedBookings([]);
-      }
+      console.error("Failed to load bookings:", err);
+      setError("Failed to load bookings");
+      setBookings([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,14 +81,14 @@ function MyBookingsPage() {
       }
 
       // Only check ownership if we have current user data
-      if (currentUser && !isOwnBooking(booking, currentUser)) {
+      if (user && !isOwnBooking(booking, user)) {
         alert("You can only cancel your own bookings");
         return;
       }
 
       await apiCancelBooking(id);
       alert("✅ Booking cancelled");
-      fetchBookingsSafely(currentUser);
+      fetchBookings();
     } catch (err) {
       console.error("[MY_BOOKINGS] Cancel error:", err);
       alert("❌ " + (err.response?.data?.message || "Failed to cancel booking"));
@@ -187,18 +173,108 @@ function MyBookingsPage() {
     return false;
   };
 
+  const handleEditClick = (booking) => {
+    setEditingBooking(booking);
+    setEditForm({
+      bookingDate: booking.bookingDate ? booking.bookingDate.slice(0, 10) : "",
+      startTime: booking.startTime || "",
+      endTime: booking.endTime || "",
+      purpose: booking.purpose || "",
+      expectedAttendees: booking.expectedAttendees || "",
+      specialRequirements: booking.specialRequirements || "",
+    });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    
+    // For expectedAttendees, only allow positive integers
+    if (name === "expectedAttendees") {
+      // Remove any non-digit characters
+      const cleanedValue = value.replace(/\D/g, "");
+      // Remove leading zeros
+      const finalValue = cleanedValue.replace(/^0+/, "") || "";
+      setEditForm((prev) => ({ ...prev, [name]: finalValue }));
+      return;
+    }
+    
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSave = async () => {
+    if (!editingBooking) return;
+
+    try {
+      setIsSaving(true);
+
+      // Send time in HH:mm format as expected by backend LocalTime
+      const payload = {
+        bookingDate: editForm.bookingDate,
+        startTime: editForm.startTime,
+        endTime: editForm.endTime,
+        purpose: editForm.purpose.trim(),
+        expectedAttendees: Number(editForm.expectedAttendees),
+        specialRequirements: editForm.specialRequirements?.trim() || null,
+      };
+
+      console.log("[EDIT BOOKING] Sending payload:", payload);
+      console.log("[EDIT BOOKING] Time format check - startTime:", payload.startTime, "endTime:", payload.endTime);
+
+      await editMyBooking(editingBooking.id, payload);
+      alert("✅ Booking updated successfully");
+      setEditingBooking(null);
+      fetchBookings();
+    } catch (err) {
+      console.error("[MY_BOOKINGS] Edit error:", err);
+      alert("❌ Failed to update: " + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingBooking(null);
+    setEditForm({
+      bookingDate: "",
+      startTime: "",
+      endTime: "",
+      purpose: "",
+      expectedAttendees: "",
+      specialRequirements: "",
+    });
+  };
+
   const renderActionsCell = (b) => {
     const status = b.status;
+    const owned = isOwnBooking(b, user);
+    const canAct = owned || !user;
 
     if (status === "REJECTED" || status === "CANCELLED") {
       return <span className="text-gray-400 text-sm">No actions</span>;
     }
 
-    const canCancelByStatus = status === "PENDING" || status === "APPROVED";
-    const owned = isOwnBooking(b, currentUser);
+    // PENDING bookings: show Edit and Cancel
+    if (status === "PENDING" && canAct) {
+      return (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => handleEditClick(b)}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => cancelBooking(b.id)}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-red-500 to-red-600 rounded-md hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all shadow-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    }
 
-    // Show cancel if owned, or if we don't have auth context (be permissive in demo mode)
-    if (canCancelByStatus && (owned || !currentUser)) {
+    // APPROVED bookings: show Cancel only
+    if (status === "APPROVED" && canAct) {
       return (
         <button
           onClick={() => cancelBooking(b.id)}
@@ -212,9 +288,18 @@ function MyBookingsPage() {
     return <span className="text-gray-400 text-sm">No actions</span>;
   };
 
-  // Apply client-side filters
+  // Debug: log bookings changes
+  useEffect(() => {
+    console.log("[MyBookingsPage] Bookings updated:", bookings);
+    console.log("[MyBookingsPage] Bookings count:", bookings.length);
+  }, [bookings]);
+
+  // Apply client-side filters (date, status, resource)
+  // Note: user filtering is already done in fetchBookingsSafely via API
   useEffect(() => {
     let arr = bookings.slice();
+    console.log("[MyBookingsPage] Filtering bookings:", arr.length, "items");
+
     if (filterDate) {
       arr = arr.filter((b) => {
         const bd = b.bookingDate ? b.bookingDate.slice(0, 10) : "";
@@ -228,6 +313,7 @@ function MyBookingsPage() {
       arr = arr.filter((b) => String(b.resource?.id || b.resourceId || b.resource) === String(filterResource));
     }
 
+    console.log("[MyBookingsPage] Filtered result:", arr.length, "items");
     setDisplayedBookings(arr);
   }, [bookings, filterDate, filterStatus, filterResource]);
 
@@ -242,19 +328,6 @@ function MyBookingsPage() {
           </p>
         </div>
 
-        {/* Auth Warning Banner */}
-        {authWarning && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-            <span className="text-amber-500 text-xl">⚠️</span>
-            <div>
-              <p className="text-amber-800 font-medium">{authWarning}</p>
-              <p className="text-amber-700 text-sm mt-1">
-                You can still browse bookings, but some features may be limited.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Error Banner */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
@@ -262,7 +335,7 @@ function MyBookingsPage() {
             <div>
               <p className="text-red-800 font-medium">{error}</p>
               <button
-                onClick={() => initializePage()}
+                onClick={() => fetchBookings()}
                 className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium underline"
               >
                 Try again
@@ -371,6 +444,7 @@ function MyBookingsPage() {
           <div className="p-6">
             <BookingTable
               bookings={displayedBookings}
+              resources={resources}
               loading={loading}
               showActions={true}
               showAdminReason={true}
@@ -379,6 +453,153 @@ function MyBookingsPage() {
             />
           </div>
         </div>
+
+        {/* Edit Booking Modal */}
+        {editingBooking && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900">Edit Booking</h3>
+                <button
+                  onClick={handleEditCancel}
+                  className="text-slate-400 hover:text-slate-600 text-xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {/* Resource (read-only) */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Resource</label>
+                  <input
+                    type="text"
+                    value={resources.find(r => String(r.id) === String(editingBooking.resourceId || editingBooking.resource?.id))?.name || editingBooking.resource?.name || 'Unknown'}
+                    disabled
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm"
+                  />
+                </div>
+
+                {/* Booking Date */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Booking Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="bookingDate"
+                    value={editForm.bookingDate}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+
+                {/* Time Selection */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Start Time <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="time"
+                      name="startTime"
+                      value={editForm.startTime}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      End Time <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="time"
+                      name="endTime"
+                      value={editForm.endTime}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Purpose */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Purpose <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="purpose"
+                    value={editForm.purpose}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+
+                {/* Expected Attendees */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Expected Attendees <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    name="expectedAttendees"
+                    value={editForm.expectedAttendees}
+                    onChange={handleEditChange}
+                    onKeyDown={(e) => {
+                      // Prevent typing: -, ., e, E, +, -
+                      if (["-", ".", "e", "E", "+"].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    min="1"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+
+                {/* Special Requirements */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Special Requirements <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="specialRequirements"
+                    value={editForm.specialRequirements}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex justify-end gap-3">
+                <button
+                  onClick={handleEditCancel}
+                  className="px-5 py-2 bg-white text-slate-700 border border-slate-300 rounded-lg font-medium hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  disabled={isSaving}
+                  className="px-5 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSaving ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                      Saving...
+                    </span>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

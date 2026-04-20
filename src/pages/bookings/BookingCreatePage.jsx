@@ -1,8 +1,13 @@
 import { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../context/AuthContext";
 import { getAllResources } from "../../api/resourceApi";
 import { createBooking, getAllBookings } from "../../api/bookingApi";
 
 function BookingCreatePage() {
+  const navigate = useNavigate();
+  const { user } = useAuthContext();
+
   const today = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -106,20 +111,50 @@ function BookingCreatePage() {
     try {
       setLoadingAvailability(true);
 
+      // Fetch bookings filtered by resourceId from backend
       const bookings = await getAllBookings({
         resourceId: Number(form.resourceId),
       });
 
       const bookingsArray = Array.isArray(bookings) ? bookings : [];
+      
+      console.log(`[AVAILABILITY] Fetched ${bookingsArray.length} bookings for resource ${form.resourceId}`);
 
-      const bookingsForDate = bookingsArray.filter((b) => {
-        const sameDate = normalizeDate(b.bookingDate) === form.bookingDate;
-        const activeStatus =
-            b.status === "APPROVED" || b.status === "PENDING";
-        return sameDate && activeStatus;
+      // Debug: Log all bookings to see what we're working with
+      console.log(`[AVAILABILITY DEBUG] Form date: ${form.bookingDate}, resourceId: ${form.resourceId}`);
+      bookingsArray.forEach((b, idx) => {
+        console.log(`[AVAILABILITY DEBUG] Booking ${idx}:`, {
+          id: b.id,
+          bookingDate: b.bookingDate,
+          resourceId: b.resourceId,
+          'resource?.id': b.resource?.id,
+          status: b.status,
+          startTime: b.startTime,
+          endTime: b.endTime,
+        });
       });
 
-      const slots = bookingsForDate.map((b) => ({
+      // Filter by date and active status (APPROVED or PENDING)
+      const bookingsForDateAndResource = bookingsArray.filter((b) => {
+        const bookingDate = normalizeDate(b.bookingDate);
+        // Try both resourceId directly and nested in resource object
+        const bookingResourceId = b.resourceId || b.resource?.id;
+        const sameDate = bookingDate === form.bookingDate;
+        const sameResource = String(bookingResourceId) === String(form.resourceId);
+        // Handle both uppercase and lowercase status
+        const statusUpper = String(b.status).toUpperCase();
+        const activeStatus = statusUpper === "APPROVED" || statusUpper === "PENDING";
+        
+        console.log(`[AVAILABILITY DEBUG] Checking booking ${b.id}: date='${bookingDate}' vs '${form.bookingDate}' (${sameDate}), resource='${bookingResourceId}' vs '${form.resourceId}' (${sameResource}), status='${statusUpper}' (${activeStatus})`);
+        
+        if (sameDate && sameResource && activeStatus) {
+          console.log(`[AVAILABILITY] MATCHED booking: ${b.startTime}-${b.endTime} (status: ${b.status})`);
+          return true;
+        }
+        return false;
+      });
+
+      const slots = bookingsForDateAndResource.map((b) => ({
         startTime: b.startTime,
         endTime: b.endTime,
         status: b.status,
@@ -149,8 +184,18 @@ function BookingCreatePage() {
   const isTimeSlotBooked = (startTime, endTime) => {
     if (!startTime || !endTime) return false;
 
+    console.log(`[CONFLICT CHECK] Checking: ${startTime}-${endTime} against ${bookedSlots.length} booked slots`);
+    
     return bookedSlots.some((slot) => {
-      return !(endTime <= slot.startTime || startTime >= slot.endTime);
+      // Check for overlap: two intervals overlap if neither ends before the other starts
+      const noOverlap = endTime <= slot.startTime || startTime >= slot.endTime;
+      const hasOverlap = !noOverlap;
+      
+      if (hasOverlap) {
+        console.log(`[CONFLICT CHECK] CONFLICT with booked slot: ${slot.startTime}-${slot.endTime}`);
+      }
+      
+      return hasOverlap;
     });
   };
 
@@ -426,8 +471,16 @@ function BookingCreatePage() {
 
     try {
       setIsSubmitting(true);
+      // Get the actual logged-in user's ID
+      const userId = user?.id || user?.userId || user?.sub;
+
+      // Send time in HH:mm format as expected by backend LocalTime
       const payload = {
         resourceId: Number(form.resourceId),
+        userId: userId ? Number(userId) : undefined,
+        userEmail: user?.email,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
         bookingDate: form.bookingDate,
         startTime: form.startTime,
         endTime: form.endTime,
@@ -437,13 +490,17 @@ function BookingCreatePage() {
       };
 
       console.log("[BOOKING] Sending payload:", payload);
+      console.log("[BOOKING] Time format check - startTime:", payload.startTime, "endTime:", payload.endTime);
+      console.log("[BOOKING] Current booked slots:", bookedSlots);
+      console.log("[BOOKING] isTimeSlotBooked result:", isTimeSlotBooked(form.startTime, form.endTime));
 
       const response = await createBooking(payload);
 
-      alert(
-          "Booking created successfully. Booking Code: " +
-          (response?.data?.bookingCode || "")
-      );
+      const bookingCode = response?.bookingCode || response?.data?.bookingCode || "";
+      alert("Booking created successfully. Booking Code: " + bookingCode);
+
+      // Navigate to My Bookings to see the newly created booking
+      navigate("/my-bookings");
 
       setForm({
         resourceId: "",
@@ -468,10 +525,19 @@ function BookingCreatePage() {
         data: err.response?.data,
       });
 
-      alert(
-          err.response?.data?.message ||
-          "Booking failed. Please try again"
-      );
+      const status = err.response?.status;
+      const message = err.response?.data?.message;
+      
+      let errorMsg;
+      if (status === 403) {
+        errorMsg = "Authentication error (403): Unable to create booking. Please log out and log in again.";
+      } else if (status === 401) {
+        errorMsg = "Session expired. Please log in again.";
+      } else {
+        errorMsg = message || "Booking failed. Please try again";
+      }
+
+      alert(errorMsg);
       setIsSubmitting(false);
     }
   };

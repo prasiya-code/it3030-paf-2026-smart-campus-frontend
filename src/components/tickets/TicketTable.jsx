@@ -29,6 +29,23 @@ const TicketTable = ({ tickets = [] }) => {
     return text.charAt(0) + text.slice(1).toLowerCase().replace('_', ' ');
   };
 
+  const getSLADetails = (ticket) => {
+    if (!ticket.createdAt) return { status: 'N/A', color: 'bg-gray-100 text-gray-700' };
+    const start = new Date(ticket.createdAt);
+    const end = (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') && ticket.resolvedAt 
+      ? new Date(ticket.resolvedAt) 
+      : new Date();
+    
+    const diffHours = (end - start) / (1000 * 60 * 60);
+    let maxHours = 24;
+    if (ticket.priority === 'HIGH' || ticket.priority === 'URGENT') maxHours = 4;
+    else if (ticket.priority === 'MEDIUM') maxHours = 8;
+
+    if (diffHours > maxHours) return { status: 'OVERDUE', color: 'bg-red-100 text-red-700 border border-red-200' };
+    if (diffHours > maxHours * 0.75) return { status: 'AT_RISK', color: 'bg-yellow-100 text-yellow-700' };
+    return { status: 'ON_TIME', color: 'bg-green-100 text-green-700' };
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -39,45 +56,54 @@ const TicketTable = ({ tickets = [] }) => {
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Category</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Priority</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">SLA</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Created Date</th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {tickets.map((ticket) => (
-              <tr 
-                key={ticket.id} 
-                className={`transition-colors ${
-                  ticket.priority === 'URGENT' 
-                    ? 'bg-red-50 hover:bg-red-100' 
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{ticket.ticketCode || ticket.id}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{formatEnumText(ticket.category)}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                    {formatEnumText(ticket.priority)}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                    {formatEnumText(ticket.status)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-'}
-                </td>
-                <td className="px-6 py-4">
-                  <Link
-                    to={`/tickets/${ticket.id}`}
-                    className="text-primary-600 hover:text-primary-800 font-medium text-sm bg-primary-50 px-3 py-1.5 rounded-lg transition-colors inline-block"
-                  >
-                    View Details
-                  </Link>
-                </td>
-              </tr>
-            ))}
+            {tickets.map((ticket) => {
+              const sla = getSLADetails(ticket);
+              return (
+                <tr 
+                  key={ticket.id} 
+                  className={`transition-colors ${
+                    ticket.priority === 'URGENT' 
+                      ? 'bg-red-50 hover:bg-red-100' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{ticket.ticketCode || ticket.id}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{formatEnumText(ticket.category)}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
+                      {formatEnumText(ticket.priority)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                      {formatEnumText(ticket.status)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${sla.color}`}>
+                      {formatEnumText(sla.status)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-'}
+                  </td>
+                  <td className="px-6 py-4">
+                    <Link
+                      to={`/tickets/${ticket.id}`}
+                      className="text-primary-600 hover:text-primary-800 font-medium text-sm bg-primary-50 px-3 py-1.5 rounded-lg transition-colors inline-block"
+                    >
+                      View Details
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

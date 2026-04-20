@@ -3,8 +3,7 @@ import AdminSectionTitle from '../../components/admin/AdminSectionTitle';
 import AdminQuickActions from '../../components/admin/AdminQuickActions';
 import AdminAnalyticsCards from '../../components/admin/AdminAnalyticsCards';
 import AdminTopResources from '../../components/admin/AdminTopResources';
-import AdminPeakBookingHours from '../../components/admin/AdminPeakBookingHours';
-import AdminRecentActivity from '../../components/admin/AdminRecentActivity';
+import AdminUserAnalytics from '../../components/admin/AdminUserAnalytics';
 import { analyticsApi } from '../../api/analyticsApi';
 import {
   quickActions
@@ -70,22 +69,16 @@ const AdminDashboardPage = () => {
           <AdminAnalyticsCards analytics={analytics} />
         </div>
 
-        {/* Top Resources and Peak Hours */}
+        {/* Top Resources and User Analytics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <AdminTopResources topResources={analytics?.topResources} />
-          <AdminPeakBookingHours peakBookingHours={analytics?.peakBookingHours} />
+          <AdminUserAnalytics userAnalytics={analytics?.userAnalytics} />
         </div>
 
         {/* Quick Actions Section */}
         <AdminSectionTitle title="Quick Actions" subtitle="Common admin tasks" />
         <div className="mb-8">
           <AdminQuickActions actions={quickActions} />
-        </div>
-
-        {/* Recent Activity Section */}
-        <AdminSectionTitle title="Recent Activity" subtitle="System-wide updates" />
-        <div className="mb-8">
-          <AdminRecentActivity recentActivity={analytics?.recentActivity} />
         </div>
       </div>
     </div>

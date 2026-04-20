@@ -15,6 +15,7 @@ import {
  *
  * @param {Object} props
  * @param {Array} props.bookings - Array of booking objects
+ * @param {Array} props.resources - Array of resource objects for name lookup
  * @param {boolean} props.loading - Whether data is loading
  * @param {boolean} props.showUser - Whether to show user column
  * @param {boolean} props.showActions - Whether to show actions column
@@ -27,6 +28,7 @@ import {
  */
 function BookingTable({
   bookings = [],
+  resources = [],
   loading = false,
   showUser = false,
   showActions = false,
@@ -90,7 +92,7 @@ function BookingTable({
                 </span>
               </td>
               <td className="px-4 py-3.5 whitespace-nowrap">
-                <span className="text-sm font-medium text-slate-900">{getResourceName(booking)}</span>
+                <span className="text-sm font-medium text-slate-900">{getResourceName(booking, resources)}</span>
               </td>
               {showUser && (
                 <td className="px-4 py-3.5 whitespace-nowrap">

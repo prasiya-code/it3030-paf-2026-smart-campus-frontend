@@ -1,9 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
+import { notificationApi } from '../../api/notificationApi';
 
 const UserSidebar = () => {
   const { user, isAdmin, isTechnician, userRole } = useAuthContext();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    loadNotificationCount();
+  }, []);
+
+  const loadNotificationCount = async () => {
+    try {
+      const data = await notificationApi.getAllNotifications();
+      const unread = data ? data.filter(n => !n.isRead).length : 0;
+      setUnreadCount(unread);
+    } catch (err) {
+      console.error('Error loading notification count:', err);
+      setUnreadCount(0);
+    }
+  };
 
   const getInitials = (firstName, lastName, email) => {
     const first = firstName?.charAt(0).toUpperCase() || '';
@@ -131,9 +148,11 @@ const UserSidebar = () => {
             >
               <span className="relative">
                 🔔
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                  3
-                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </span>
               <span className="font-medium">Notifications</span>
             </NavLink>
